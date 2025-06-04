@@ -1,0 +1,25 @@
+name: Build and Push to GitLab Container Registry
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to GitLab Container Registry
+        run: echo "${{ secrets.GITLAB_TOKEN }}" | docker login registry.gitlab.com -u "${{ secrets.GITLAB_ACTOR }}" --password-stdin
+
+      - name: Build image
+        run: docker build -t registry.gitlab.com/iateam613/algoflow .
+
+      - name: Push image
+        run: docker push registry.gitlab.com/iateam613/algoflow
