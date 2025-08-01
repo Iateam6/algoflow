@@ -22,10 +22,8 @@ def generate_doc(request):
     generate a single document based on one option, and return its download URL.
     """
     ALLOWED_NAMES = {
-        "form-i-129","form-g-28","form-g-1145","form-i-907",
-        "certified-lca","degree-evidence","employer-letter",
-        "form-i-94","form-w2","form-i-797","form-w2-1099",
-        "professional-certs"
+         "n-400", "g-28", "g-1145",
+         "passport","visa-pages","travel-itinerary"
     }
 
     if request.method != 'POST':
