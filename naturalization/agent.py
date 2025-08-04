@@ -258,6 +258,81 @@ async def initialize_agents(vector_store_id):
                 ),
             ],
         ),
+        "RFE Response Brief": Agent(
+            name="RFE Response Brief Agent",
+            instructions=(
+                f"""
+                Today’s date is {current_date}.
+                You are tasked with generating an Good Moral Character Brief for a Naturalization (N-400) application.
+
+                **Step 1**: Extract all necessary information only from the file provided. Do not use information from previous files or external sources. If any required information is missing, leave the corresponding placeholder blank; do not attempt to fill it with assumptions or unrelated data. This includes:
+                - Personal details of the beneficiary or the client.
+                - Employer details.
+                - Job description and duties.
+                - Required forms:
+                    - N-400
+                    - G-28
+                    - G-1145
+                - Supporting documents:
+                   - Passport
+                   - Visa pages
+                   - Travel itinerary
+                  
+                **Step 2**: Use the following structure bellow:
+                ```
+                # Good Moral Character Brief – [Applicant’s Full Name]  
+
+                **Date:** _YYYY‑MM‑DD_  
+
+                **Subject:** Good Moral Character Brief – Naturalization of **[Applicant’s Full Name]**  
+
+                **Dear USCIS Officer,**  
+
+                **Background & Statutory Requirement:**  
+                Pursuant to INA § 316(e) and 8 CFR § 316.10, the Applicant must demonstrate good moral character (GMC) during the statutory period: the five years immediately preceding filing (or three years if filing based on marriage to a U.S. citizen), and continuing up to the date of the Oath of Allegiance.
+
+                **Evidence of Positive Conduct:**  
+                During the required period, the Applicant has maintained steady lawful permanent residence, paid all required federal and state taxes, and complied with community and civic responsibilities. There are no arrests, convictions, or citations during the GMC period or otherwise. The Applicant has demonstrated honesty in all immigration filings and interviews, including full and truthful responses to all questions on Form N‑400 and during prior immigration proceedings.
+
+                **Relevant Supporting Documentation:**  
+                - IRS tax transcripts and W‑2 statements for the GMC period confirming timely filing and payment of taxes  
+                - Personal affidavits and letters of recommendation attesting to honesty, reliability, and contributions to the local community (e.g. volunteer service, family support)  
+                - Evidence of Selective Service registration (if applicable), and no incidents of failure to register during the eligible period  
+
+                **No Disqualifying Conduct:**  
+                The Applicant has not committed any crimes involving moral turpitude (CIMTs), aggravated felonies, or unlawful acts that would automatically disqualify GMC under INA §101(f) or 8 CFR § 316.10(b). There have been no false claims to U.S. citizenship, no immigration fraud, and no misuse of public benefits that would reflect dishonesty or poor character.
+
+                **Totality of Circumstances & Character Rehabilitation (if applicable):**  
+                There is no adverse conduct outside the statutory period that bears negatively on the Applicant’s present moral character. Even if past incidents existed, they would be outside the GMC period, and the Applicant’s subsequent behavior demonstrates full reformation and alignment with U.S. standards of good moral character.
+
+                **Conclusion & Request:**  
+                Based on the foregoing and the attached documentation, the Applicant clearly meets and continues to meet the statutory and regulatory requirements for **Good Moral Character**. The Applicant respectfully requests favorable consideration of these factors in adjudicating the N‑400 naturalization application.
+
+                **Very truly yours,**  
+                \_\_\_\_\_\_\_\_\_\_\_,  
+                **[Applicant’s Name]**
+
+
+                ```
+                step 3.While selecting data to fill in the placeholders, use only accurate and relevant information from the provided input file or files. If the required information is not available, leave the placeholder blank. Do not attempt to fill placeholders with incorrect or unrelated data.
+                Step 4.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
+                Step 5.In the "Supporting Evidence & Exhibits" section, list only the exhibits for which supporting documents are actually provided in the input. Do not list exhibits that are missing or not provided. Do not include any placeholders or blank entries for missing exhibits. 
+                Step 6.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
+                Step 7.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
+                Step 8.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
+                Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
+                """
+            ),
+            model="gpt-4.1",
+            model_settings=ModelSettings(temperature=0.9),
+            tools=[
+                WebSearchTool(),
+                FileSearchTool(
+                    max_num_results=50,
+                    vector_store_ids=[vector_store_id],
+                ),
+            ],
+        ),
     }
 
 #Initialize agents with the given vector store ID function
