@@ -25,64 +25,39 @@ async def initialize_agents(vector_store_id):
 
                 **Step 2**: Use the following structure for the letter:
                 ```
-                #Petition Cover Letter for H-1B Visa Application – [Beneficiary’s Full Name]
-                **[Employer’s Name]**  
-                **[Employer’s Address]**  
-                **[City, State, ZIP Code]**  
-
-                **Date:** _YYYY-MM-DD_  
-
-                **Subject:** Petition Cover Letter for H-1B Visa Application – [Beneficiary’s Full Name]  
-
-                **Dear USCIS Officer,**  
-
-                **Introduction**  
-                **Parties & Purpose:** “[Employer’s Name] (the “Petitioner”) respectfully submits this cover letter in support of its H-1B petition for **[Beneficiary’s Name]** (the “Beneficiary”).”  
-                **Position Overview:** Title: _[Position Title]_; SOC Code: _[Code]_; Worksite: _[City, State]_  
-                **Statutory Basis:** Requested under INA § 214(i) governing specialty occupations.  
-
-                **Eligibility – Specialty Occupation**  
-                **Degree Requirement:** Position requires at minimum a bachelor’s degree or higher in _[Field of Study]_; Beneficiary holds a _[Degree]_ in _[Field]_ from _[Institution]_ (Date).  
-                **Specialized Duties:**  
-                    Duty 1: _[Describe primary function]_  
-                    Duty 2: _[Describe advanced responsibility requiring theoretical application]_  
-                    Duty 3: _[List any supervisory or collaborative tasks]_  
-                **Alignment with USCIS Policy:**  
-                    Compare job duties to SOC description for code _[Code]_.  
-                    Cite policy memo (e.g., “Matter of Michael Hertz Associates” or AAO precedent).  
-                **Beneficiary’s Qualifications:**  
-                    Prior H-1B (if any): Receipt No. _[Number]_, Approval Date _[Date]_.  
-                    Professional certifications: _[List]_ demonstrating non-routine expertise.  
-
-                **Regulatory & Procedural Compliance**  
-                **Labor Condition Application (LCA):** Certified by Department of Labor on _[Date]_ for wage level _[Level]_ at worksite _[Address]_.  
-                **Public Access File:** Documentation available at the worksite in compliance with 20 C.F.R. § 655.760.  
-                **Maintenance of Status:** Beneficiary’s current status (_[e.g., F-1 OPT]_) valid through _[Date]_; no gap anticipated.  
-                **Dependent Filings (if applicable):** H-4 petitions for _[Spouse/Children]_ filed concurrently (Receipt Nos. _[Numbers]_).  
-
-                **Supporting Evidence & Exhibits**  
-                **Exhibit A:** Beneficiary’s diploma(s) and transcripts (with certified translations).  
-                **Exhibit B:** Detailed resume/CV and letters of employment verification.  
-                **Exhibit C:** Signed job offer letter and comprehensive job description.  
-                **Exhibit D:** Organizational chart showing Beneficiary’s role and reporting structure.  
-                **Exhibit E:** Prevailing Wage Determination (PWD) or certified LCA.  
-                **Exhibit F:** Professional licenses, patents, publications, or conference presentations.  
-
-                **Legal Standard & Precedent**  
-                **Specialty Occupation Test (INA § 214(i)):** Position requires theoretical and practical application of highly specialized knowledge.  
-                **AAO Precedents:** Cite decisions where similar roles were approved (e.g., IT systems analyst, financial analyst).  
-                **Burden of Proof:** Petitioner has met its burden to show Beneficiary’s qualifications and position requirements.  
-
-                **Conclusion & Request for Favorable Adjudication**  
-                “Based on the foregoing, the Petitioner has demonstrated that the Beneficiary qualifies for classification in a specialty occupation under INA § 214(i). Petitioner respectfully requests that USCIS approve this H-1B petition promptly.”  
-                **Point of Contact:** For any questions or additional documentation, please contact **[Employer’s Representative Name]**, **[Title]**, at **[Phone Number]** or **[Email Address]**.  
+                **RE: Application for Change of Status (Form I-539) and Application for Employment Authorization Document (Form I-765)**  
+                **Applicant:** [Insert Full Name of Applicant]  
+                **Principal Applicant:** [Insert Full Name of Principal Applicant]
+                
+                Dear Sir/Madam:
+                
+                Please accept the enclosed I-539 application to change the status of [Applicant's Full Name] to [Dependent Status] dependent status. [Applicant's] current [Status] will expire on [MM/DD/YYYY].
+                
+                The following documents are enclosed in support of this application:
+                
+                1. Two separate checks in the amount of:  
+                   - $[Amount] for the Form I-539 application filing fee  
+                   - $[Amount] for the Form I-765 application filing fee  
+                2. Form G-1145, *e-Notification of Application/Petition Acceptance*  
+                3. Form G-28, *Notice of Entry of Appearance as Attorney or Accredited Representative*  
+                4. Form I-539, *Application to Change/Extend Nonimmigrant Status*  
+                5. Form I-765, *Application for Employment Authorization*, with two passport-style photos attached  
+                6. Documentation for the principal applicant ([Spouse's Full Name]):  
+                   - Form I-797A Approval Notice for Form I-539, Petition for a Nonimmigrant Worker  
+                   - Passport biographic page  
+                7. Documentation for the dependent applicant ([Applicant's Full Name]):  
+                   - Form I-94 and CBP travel history  
+                   - F-1 Visa  
+                   - Form I-20  
+                   - Passport biographic page  
+                   - Marriage certificate  
+                
+                We respectfully request the prompt adjudication of this application. Thank you for your attention to this matter.
 
                 **Sincerely,**  
                 \_\_\_\_\_\_\_\_\_\_\_,
                 **[Employer’s Representative Name], [Title]**  
-                **[Company Name]**  
-
-                **cc:** [Attorney’s Name (if applicable)], [Beneficiary], [HR File]  
+                **[Company Name]**    
                 ```
                 Step 3.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
                 Step 4.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
