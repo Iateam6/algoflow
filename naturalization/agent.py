@@ -32,38 +32,22 @@ async def initialize_agents(vector_store_id):
                   
                 **Step 2**: Use the following structure bellow:
                 ``` 
-                # RE: Application for Naturalization (Form N-400)
-
-                **Applicant:** [Full Name of Applicant]  
-                **Alien Number (A#):** [A-Number]
+                **RE: Application for Reentry Permit (Form I-131)**  
+                **Applicant:** [Insert Full Name]  
+                **Alien Number:** [Insert A-Number]  
                 
-                Dear Sir or Madam:
+                Dear Sir/Madam,
                 
-                Pursuant to the Immigration and Nationality Act, we are submitting Form N-400, Application for Naturalization, on behalf of **[Applicant's Full Name]**, a lawful permanent resident of the United States.
+                We are submitting the following documents in support of the above applicant’s **Application for Reentry Permit (Form I-131)**:
                 
-                Per statutory requirements, **[Applicant's Name]** has:
+                1 Check in the amount of $[Insert Amount] to cover the **Form I-131** filing fee and **biometric services**  
+                2 **Form G-1145**, *e-Notification of Application/Petition Acceptance*  
+                3 **Form G-28**, *Notice of Entry of Appearance as Attorney or Accredited Representative*  
+                4 **Form I-131**, *Application for Travel Document*  
+                5 Copy of the **front and back** of the applicant’s **green card**  
+                6 Copy of the applicant’s **passport biographic page**  
                 
-                - Resided continuously in the United States for a period of at least **five (5) years**, having been lawfully admitted as a permanent resident on **[Date of Permanent Residency]**
-                - Been physically present in the United States in compliance with the statutory presence requirements
-                - Not been outside of the United States for a total of more than **[Number of Days]** since becoming a lawful permanent resident
-                
-                Based on this eligibility, please find enclosed the following documents in support of the application:
-                
-                ### Enclosures:
-                
-                1 Check in the amount of $[Amount] to cover the Form N-400 filing fee and biometrics (fingerprint) processing fee  
-                2 Form G-1145, *e-Notification of Application/Petition Acceptance*  
-                3 Form G-28, *Notice of Entry of Appearance as Attorney or Representative*  
-                4 Form N-400, *Application for Naturalization*  
-                5 N-400 Addendum (if applicable)  
-                6 Copy of front and back of applicant’s Form I-551 (Green Card)  
-                7 Copy of applicant’s passport biographic page  
-                8 Copy of marriage certificate(s) with certified translation (if applicable)  
-                9 Most recent federal tax returns (e.g., IRS Form 1040)  
-                10 Recent bank statements as evidence of residence/financial presence
-                
-                Thank you for your favorable consideration of this application. Should any additional information or documentation be required, please do not hesitate to contact us.
-                
+                We appreciate your prompt attention to this matter.
 
 
                 Very truly yours,
