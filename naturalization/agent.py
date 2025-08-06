@@ -32,39 +32,39 @@ async def initialize_agents(vector_store_id):
                   
                 **Step 2**: Use the following structure bellow:
                 ``` 
-                Premium Processing  
-                USCIS [Service Center Name]  
-                [Street Address]  
-                [City, State ZIP]  
+                # RE: Application for Naturalization (Form N-400)
 
-                Date: [YYYY‑MM‑DD]  
+                **Applicant:** [Full Name of Applicant]  
+                **Alien Number (A#):** [A-Number]
+                
+                Dear Sir or Madam:
+                
+                Pursuant to the Immigration and Nationality Act, we are submitting Form N-400, Application for Naturalization, on behalf of **[Applicant's Full Name]**, a lawful permanent resident of the United States.
+                
+                Per statutory requirements, **[Applicant's Name]** has:
+                
+                - Resided continuously in the United States for a period of at least **five (5) years**, having been lawfully admitted as a permanent resident on **[Date of Permanent Residency]**
+                - Been physically present in the United States in compliance with the statutory presence requirements
+                - Not been outside of the United States for a total of more than **[Number of Days]** since becoming a lawful permanent resident
+                
+                Based on this eligibility, please find enclosed the following documents in support of the application:
+                
+                ### Enclosures:
+                
+                1 Check in the amount of $[Amount] to cover the Form N-400 filing fee and biometrics (fingerprint) processing fee  
+                2 Form G-1145, *e-Notification of Application/Petition Acceptance*  
+                3 Form G-28, *Notice of Entry of Appearance as Attorney or Representative*  
+                4 Form N-400, *Application for Naturalization*  
+                5 N-400 Addendum (if applicable)  
+                6 Copy of front and back of applicant’s Form I-551 (Green Card)  
+                7 Copy of applicant’s passport biographic page  
+                8 Copy of marriage certificate(s) with certified translation (if applicable)  
+                9 Most recent federal tax returns (e.g., IRS Form 1040)  
+                10 Recent bank statements as evidence of residence/financial presence
+                
+                Thank you for your favorable consideration of this application. Should any additional information or documentation be required, please do not hesitate to contact us.
+                
 
-                RE:  Request for First Preference Naturalization 
-                    Self‑Petitioner: [Beneficiary’s Full Name]  
-                    Position/Title: [e.g., EVP of Technology]  
-
-                Dear Immigration Officer:
-
-                Please find enclosed the immigrant petition filed on behalf of [Beneficiary’s Full Name] as an Naturalization Alien of Extraordinary Ability.
-
-                The following items are included in support of this petition:
-
-                1.  A check for $[Amount] for the I‑907 premium processing fee  
-                2.  A check for $[Amount] for the I‑140 filing fee  
-                3.  Form I‑907, “Request for Premium Processing Service”  
-                4.  Form G‑28, “Notice of Entry of Appearance as Attorney or Accredited Representative”  
-                5.  Form I‑140, “Immigrant Petition for Alien Worker”  
-                6.  [Beneficiary’s Last Name]’s biographical documents:  
-                    a. Passport biographical page  
-                    b. O‑1 approval notice  
-                    c. Most recent I‑94  
-                7.  Attorney’s letter of support  
-                8.  Exhibit list  
-                9.  Exhibits evidencing [Beneficiary’s Last Name]’s Naturalization credentials  
-
-                We respectfully submit that the enclosed documentation establishes [Beneficiary’s Full Name]’s internationally recognized achievements and abilities as a leader in the [field] industry, and that he/she is among the small percentage of individuals who have risen to the top of his/her field.  [Beneficiary’s Last Name] therefore merits classification as an Alien of Extraordinary Ability.
-
-                If you require any further information or documentation to support the attached petition, please do not hesitate to contact our office.
 
                 Very truly yours,
 
@@ -280,33 +280,29 @@ async def initialize_agents(vector_store_id):
                   
                 **Step 2**: Use the following structure bellow:
                 ```
-                # Good Moral Character Brief – [Applicant’s Full Name]  
+                # RE: NOTICE OF CONTINUANCE (FORM N-400)
 
-                **Date:** _YYYY‑MM‑DD_  
-
-                **Subject:** Good Moral Character Brief – Naturalization of **[Applicant’s Full Name]**  
-
-                **Dear USCIS Officer,**  
-
-                **Background & Statutory Requirement:**  
-                Pursuant to INA § 316(e) and 8 CFR § 316.10, the Applicant must demonstrate good moral character (GMC) during the statutory period: the five years immediately preceding filing (or three years if filing based on marriage to a U.S. citizen), and continuing up to the date of the Oath of Allegiance.
-
-                **Evidence of Positive Conduct:**  
-                During the required period, the Applicant has maintained steady lawful permanent residence, paid all required federal and state taxes, and complied with community and civic responsibilities. There are no arrests, convictions, or citations during the GMC period or otherwise. The Applicant has demonstrated honesty in all immigration filings and interviews, including full and truthful responses to all questions on Form N‑400 and during prior immigration proceedings.
-
-                **Relevant Supporting Documentation:**  
-                - IRS tax transcripts and W‑2 statements for the GMC period confirming timely filing and payment of taxes  
-                - Personal affidavits and letters of recommendation attesting to honesty, reliability, and contributions to the local community (e.g. volunteer service, family support)  
-                - Evidence of Selective Service registration (if applicable), and no incidents of failure to register during the eligible period  
-
-                **No Disqualifying Conduct:**  
-                The Applicant has not committed any crimes involving moral turpitude (CIMTs), aggravated felonies, or unlawful acts that would automatically disqualify GMC under INA §101(f) or 8 CFR § 316.10(b). There have been no false claims to U.S. citizenship, no immigration fraud, and no misuse of public benefits that would reflect dishonesty or poor character.
-
-                **Totality of Circumstances & Character Rehabilitation (if applicable):**  
-                There is no adverse conduct outside the statutory period that bears negatively on the Applicant’s present moral character. Even if past incidents existed, they would be outside the GMC period, and the Applicant’s subsequent behavior demonstrates full reformation and alignment with U.S. standards of good moral character.
-
-                **Conclusion & Request:**  
-                Based on the foregoing and the attached documentation, the Applicant clearly meets and continues to meet the statutory and regulatory requirements for **Good Moral Character**. The Applicant respectfully requests favorable consideration of these factors in adjudicating the N‑400 naturalization application.
+                **Applicant:** [Full Name of Applicant]  
+                **Alien Number (A#):** [A-Number]
+                
+                Dear Sir or Madam,
+                
+                The United States Citizenship and Immigration Services (USCIS) issued a **Notice of Continuance** for the above-referenced case on **[Date of Original Notice]**. This response is being submitted pursuant to the extended timelines allowed by USCIS based on its flexibility policy announced on **[Flexibility Announcement Date]**.
+                
+                USCIS allows a response to be submitted within 60 calendar days after the deadline set forth in the original Notice of Continuance, provided the issuance date on the notice falls between **[Start Date]** and **[End Date]**, inclusive. The original notice in this case was issued on **[Date of Issuance]**, and therefore this response is timely.
+                
+                ## Reason for Continuance:
+                
+                USCIS records indicate that the applicant traveled outside the United States for a period of six months or more following lawful admission for permanent residence. As such, additional documentation is required to demonstrate that the applicant **did not abandon U.S. residency**.
+                
+                ## Enclosed Documentation:
+                
+                1 Copy of [Year] Tax Return  
+                2 Notice of Immigrant Visa Case Creation  
+                3 Affidavit from [Name or Relationship] affirming that [Affiant] maintained the applicant’s property during the applicant’s absence from the U.S.  
+                4 Affidavit from [Name or Relationship] affirming that [Affiant] maintained the applicant’s property during the applicant’s absence from the U.S.
+                
+                Thank you for your favorable consideration of the enclosed documents. Should additional information be needed to make a decision on this case, please do not hesitate to contact us.
 
                 **Very truly yours,**  
                 \_\_\_\_\_\_\_\_\_\_\_,  
