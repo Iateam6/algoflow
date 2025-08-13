@@ -260,18 +260,18 @@ async def initialize_agents(vector_store_id):
                         - Supplemental financial documents uploaded to CEAC
                 **Step 2**: Use the following structure for the letter:
                 ```
-               ## Document‑Upload Memo
-
-               **Purpose:** This memo outlines the required procedure for uploading civil and financial documents to the National Visa Center (NVC) via the Consular Electronic Application Center (CEAC) once the DS‑260 Immigrant Visa Application has been submitted.
-
-               **Instructions for Uploading Documents (≈ 100 words):**  
-               After submitting Form DS‑260, the applicant (or their representative) must log into CEAC using the NVC case number and invoice ID. Navigate to the “Civil Documents” and “Affidavit of Support Documents & Financial Evidence” sections, and click the **“Start Now”** buttons to begin uploading files. Each required document must be uploaded as a separate PDF, JPG, or JPEG file under 2 MB, in color if the original is in color, and named clearly (e.g. "Smith_John_birthcertificate.jpg"). Only after all required uploads are complete will the **“Submit Documents”** button activate; pressing it places the case in queue for NVC review .
-
-               **Accepted Document Types & File Requirements (≈ 100 words):**  
-               CEAC requires files in JPG, JPEG, or PDF formats, each no larger than 2 MB. Upload one document per file, properly labeled with case number and document type (e.g., “Lastname_Case123_passport.pdf”). Required documents typically include the passport biographical page, birth certificate, marriage certificate (if applicable), police clearance certificates, and any additional civil or financial evidence as outlined in the NVC-generated checklist. Do not send original documents; only clear, legible scans or photos are permitted for electronic submission. Originals must be brought to the consular interview.
-
-               **Post‑Upload Workflow (≈ 100 words):**  
-               Once uploads are completed and the “Submit Documents” button is clicked, the application moves into NVC’s queue for review. If any document is missing or non‑compliant, NVC will update the status and request additional uploads; applicants can return to CEAC later to correct or add files and must resubmit by clicking “Submit Documents” again. After approving all items, NVC marks the case as “documentarily complete” and coordinates with the U.S. Embassy or Consulate to schedule the visa interview. The applicant should not mail documents unless explicitly instructed by NVC .
+                ## Document‑Upload Memo
+    
+                **Purpose:** This memo outlines the required procedure for uploading civil and financial documents to the National Visa Center (NVC) via the Consular Electronic Application Center (CEAC) once the DS‑260 Immigrant Visa Application has been submitted.
+    
+                **Instructions for Uploading Documents (≈ 100 words):**  
+                After submitting Form DS‑260, the applicant (or their representative) must log into CEAC using the NVC case number and invoice ID. Navigate to the “Civil Documents” and “Affidavit of Support Documents & Financial Evidence” sections, and click the **“Start Now”** buttons to begin uploading files. Each required document must be uploaded as a separate PDF, JPG, or JPEG file under 2 MB, in color if the original is in color, and named clearly (e.g. "Smith_John_birthcertificate.jpg"). Only after all required uploads are complete will the **“Submit Documents”** button activate; pressing it places the case in queue for NVC review .
+    
+                **Accepted Document Types & File Requirements (≈ 100 words):**  
+                CEAC requires files in JPG, JPEG, or PDF formats, each no larger than 2 MB. Upload one document per file, properly labeled with case number and document type (e.g., “Lastname_Case123_passport.pdf”). Required documents typically include the passport biographical page, birth certificate, marriage certificate (if applicable), police clearance certificates, and any additional civil or financial evidence as outlined in the NVC-generated checklist. Do not send original documents; only clear, legible scans or photos are permitted for electronic submission. Originals must be brought to the consular interview.
+    
+                **Post‑Upload Workflow (≈ 100 words):**  
+                Once uploads are completed and the “Submit Documents” button is clicked, the application moves into NVC’s queue for review. If any document is missing or non‑compliant, NVC will update the status and request additional uploads; applicants can return to CEAC later to correct or add files and must resubmit by clicking “Submit Documents” again. After approving all items, NVC marks the case as “documentarily complete” and coordinates with the U.S. Embassy or Consulate to schedule the visa interview. The applicant should not mail documents unless explicitly instructed by NVC .
 
 
                 ```
