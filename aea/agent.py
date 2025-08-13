@@ -322,10 +322,7 @@ async def initialize_agents(vector_store_id):
 async def generate_document(file_type, agents):
     """
     Generate a single document using the corresponding agent.
-    
-    Args:
-        file_type (str): The type of document to generate (e.g., "petition_cover_letter").
-        agents (dict): Dictionary of initialized agents.
+
     """
     agent = agents.get(file_type)
     if agent:
