@@ -207,7 +207,7 @@ async def initialize_agents(vector_store_id):
                 ),
             ],
         ),
-        "Recommendation Letter": Agent(
+        "Recommendation-Letter": Agent(
             name="Recommendation Letter Agent",
             instructions=(
                 f"""
