@@ -101,6 +101,97 @@ async def initialize_agents(vector_store_id):
                 ),
             ],
         ),
+        "Exhibit List": Agent(
+            name="Exhibit List Agent",
+            instructions=(
+                f"""
+                Today’s date is {current_date}.
+                You are tasked with generating a Exhibit List for an H-1B visa application.
+                
+                **Step 1**: Extract all necessary information from the vector store, including:
+                - Personal details of the beneficiary.
+                - Employer details.
+                - Job description and duties.
+                - Supporting evidence such as Form I-129, the H-Classification Supplement, certified LCA, and evidence of degree.
+
+                **Step 2**: Use the following structure for the letter:
+                ```
+                #Petition Cover Letter for H-1B Visa Application – [Beneficiary’s Full Name]
+                **[Employer’s Name]**  
+                **[Employer’s Address]**  
+                **[City, State, ZIP Code]**  
+
+                **Date:** _YYYY-MM-DD_  
+
+                **Subject:** Petition Cover Letter for H-1B Visa Application – [Beneficiary’s Full Name]  
+
+                **Dear USCIS Officer,**  
+
+                **Introduction**  
+                **Parties & Purpose:** “[Employer’s Name] (the “Petitioner”) respectfully submits this cover letter in support of its H-1B petition for **[Beneficiary’s Name]** (the “Beneficiary”).”  
+                **Position Overview:** Title: _[Position Title]_; SOC Code: _[Code]_; Worksite: _[City, State]_  
+                **Statutory Basis:** Requested under INA § 214(i) governing specialty occupations.  
+
+                **Eligibility – Specialty Occupation**  
+                **Degree Requirement:** Position requires at minimum a bachelor’s degree or higher in _[Field of Study]_; Beneficiary holds a _[Degree]_ in _[Field]_ from _[Institution]_ (Date).  
+                **Specialized Duties:**  
+                    Duty 1: _[Describe primary function]_  
+                    Duty 2: _[Describe advanced responsibility requiring theoretical application]_  
+                    Duty 3: _[List any supervisory or collaborative tasks]_  
+                **Alignment with USCIS Policy:**  
+                    Compare job duties to SOC description for code _[Code]_.  
+                    Cite policy memo (e.g., “Matter of Michael Hertz Associates” or AAO precedent).  
+                **Beneficiary’s Qualifications:**  
+                    Prior H-1B (if any): Receipt No. _[Number]_, Approval Date _[Date]_.  
+                    Professional certifications: _[List]_ demonstrating non-routine expertise.  
+
+                **Regulatory & Procedural Compliance**  
+                **Labor Condition Application (LCA):** Certified by Department of Labor on _[Date]_ for wage level _[Level]_ at worksite _[Address]_.  
+                **Public Access File:** Documentation available at the worksite in compliance with 20 C.F.R. § 655.760.  
+                **Maintenance of Status:** Beneficiary’s current status (_[e.g., F-1 OPT]_) valid through _[Date]_; no gap anticipated.  
+                **Dependent Filings (if applicable):** H-4 petitions for _[Spouse/Children]_ filed concurrently (Receipt Nos. _[Numbers]_).  
+
+                **Supporting Evidence & Exhibits**  
+                **Exhibit A:** Beneficiary’s diploma(s) and transcripts (with certified translations).  
+                **Exhibit B:** Detailed resume/CV and letters of employment verification.  
+                **Exhibit C:** Signed job offer letter and comprehensive job description.  
+                **Exhibit D:** Organizational chart showing Beneficiary’s role and reporting structure.  
+                **Exhibit E:** Prevailing Wage Determination (PWD) or certified LCA.  
+                **Exhibit F:** Professional licenses, patents, publications, or conference presentations.  
+
+                **Legal Standard & Precedent**  
+                **Specialty Occupation Test (INA § 214(i)):** Position requires theoretical and practical application of highly specialized knowledge.  
+                **AAO Precedents:** Cite decisions where similar roles were approved (e.g., IT systems analyst, financial analyst).  
+                **Burden of Proof:** Petitioner has met its burden to show Beneficiary’s qualifications and position requirements.  
+
+                **Conclusion & Request for Favorable Adjudication**  
+                “Based on the foregoing, the Petitioner has demonstrated that the Beneficiary qualifies for classification in a specialty occupation under INA § 214(i). Petitioner respectfully requests that USCIS approve this H-1B petition promptly.”  
+                **Point of Contact:** For any questions or additional documentation, please contact **[Employer’s Representative Name]**, **[Title]**, at **[Phone Number]** or **[Email Address]**.  
+
+                **Sincerely,**  
+                \_\_\_\_\_\_\_\_\_\_\_,
+                **[Employer’s Representative Name], [Title]**  
+                **[Company Name]**  
+
+                **cc:** [Attorney’s Name (if applicable)], [Beneficiary], [HR File]  
+                ```
+                Step 3.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
+                Step 4.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
+                Step 5.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
+                Step 6.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
+                Step 7. Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
+                """
+            ),
+            model="gpt-4.1",
+            model_settings=ModelSettings(temperature=0.9),
+            tools=[
+                WebSearchTool(),
+                FileSearchTool(
+                    max_num_results=5,
+                    vector_store_ids=[vector_store_id],
+                ),
+            ],
+        ),
         "Employer Support Letter": Agent(
             name="Employer Support Letter Agent",
             instructions=(
