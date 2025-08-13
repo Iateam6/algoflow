@@ -75,6 +75,88 @@ async def initialize_agents(vector_store_id):
                 ),
             ],
         ),
+        "Exhibit List": Agent(
+            name="Exhibit List Agent",
+            instructions=(
+                f"""
+                Today’s date is {current_date}.
+                You are tasked with generating a Exhibit List for Naturalization (N-400) application.
+
+                **Step 1**: Extract all necessary information only from the file provided. Do not use information from previous files or external sources. If any required information is missing, leave the corresponding placeholder blank; do not attempt to fill it with assumptions or unrelated data. This includes:
+                - Personal details of the beneficiary or the client.
+                - Employer details.
+                - Job description and duties.
+                - Required forms:
+                    - N-400
+                    - G-28
+                    - G-1145
+                - Supporting documents:
+                   - Passport
+                   - Visa pages
+                   - Travel itinerary
+                  
+                **Step 2**: Use the following structure bellow:
+                ``` 
+                                                    Exhibit List  
+                                    Self-Petitioner: [Beneficiary’s Full Name]  
+                                    Position: [Beneficiary’s Position/Title]  
+
+                Exhibit 1:  [Description of Exhibit 1]  
+                Exhibit 2:  [Description of Exhibit 2]  
+                Exhibit 3:  [Description of Exhibit 3]  
+                Exhibit 4:  [Description of Exhibit 4]  
+                Exhibit 5:  [Description of Exhibit 5]  
+                Exhibit 6:  [Description of Exhibit 6]  
+                Exhibit 7:  [Description of Exhibit 7]  
+                Exhibit 8:  [Description of Exhibit 8]  
+                Exhibit 9:  [Description of Exhibit 9]  
+                Exhibit 10: [Description of Exhibit 10]  
+                Exhibit 11: [Description of Exhibit 11]  
+                Exhibit 12: [Description of Exhibit 12]  
+                Exhibit 13: [Description of Exhibit 13]  
+                Exhibit 14: [Description of Exhibit 14]  
+                Exhibit 15: [Description of Exhibit 15]  
+                Exhibit 16: [Description of Exhibit 16]  
+                Exhibit 17: [Description of Exhibit 17]  
+                Exhibit 18: [Description of Exhibit 18]  
+                Exhibit 19: [Description of Exhibit 19]  
+                Exhibit 20: [Description of Exhibit 20]  
+                Exhibit 21: [Description of Exhibit 21]  
+                Exhibit 22: [Description of Exhibit 22]  
+                Exhibit 23: [Description of Exhibit 23]  
+                Exhibit 24: [Description of Exhibit 24]  
+                Exhibit 25: [Description of Exhibit 25]  
+                Exhibit 26: [Description of Exhibit 26]  
+                Exhibit 27: [Description of Exhibit 27]  
+                Exhibit 28: [Description of Exhibit 28]  
+                Exhibit 29: [Description of Exhibit 29]  
+                Exhibit 30: [Description of Exhibit 30]  
+                Exhibit 31: [Description of Exhibit 31]  
+                Exhibit 32: [Description of Exhibit 32]  
+                Exhibit 33: [Description of Exhibit 33]  
+                Exhibit 34: [Description of Exhibit 34]  
+
+                ```
+                step 3.While selecting data to fill in the placeholders, use only accurate and relevant information from the provided input file or files. If the required information is not available, leave the placeholder blank. Do not attempt to fill placeholders with incorrect or unrelated data.
+                Step 4.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
+                Step 5.In the "Supporting Evidence & Exhibits" section, list only the exhibits for which supporting documents are actually provided in the input. Do not list exhibits that are missing or not provided. Do not include any placeholders or blank entries for missing exhibits. 
+                Step 6.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
+                Step 7.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
+                Step 8.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
+                Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
+
+                """
+            ),
+            model="gpt-4.1",
+            model_settings=ModelSettings(temperature=0.7),
+            tools=[
+                WebSearchTool(),
+                FileSearchTool(
+                    max_num_results=50,
+                    vector_store_ids=[vector_store_id],
+                ),
+            ],
+        ),
         "Eligibility-Checklist Memo": Agent(
             name="Eligibility-Checklist Memo Agent",
             instructions=(
