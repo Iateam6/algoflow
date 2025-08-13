@@ -15,80 +15,70 @@ async def initialize_agents(vector_store_id):
             instructions=(
                 f"""
                 Today’s date is {current_date}.
-                You are tasked with generating a petition cover letter for an H-1B visa application.
-                
-                **Step 1**: Extract all necessary information from the vector store, including:
+                You are tasked with generating a petition cover letter for an Application for Advance Parole / Travel Authorization (Form I-131).
+
+                **Step 1**: Extract all necessary information only from the file provided. Do not use information from previous files or external sources. If any required information is missing, leave the corresponding placeholder blank; do not attempt to fill it with assumptions or unrelated data. This includes:
                 - Personal details of the beneficiary.
                 - Employer details.
                 - Job description and duties.
                 - Supporting evidence such as Form I-129, the H-Classification Supplement, certified LCA, and evidence of degree.
+                - Required forms:
+                  - Form I-131 (Application for Travel Document)
+                  - Form G-28 (Notice of Entry of Appearance as Attorney), if represented
+                  - Form G-1145 (E-Notification of Application/Petition Acceptance)
+                - Supporting documents (include only those present in the provided file set; leave blank otherwise):
+                  - Evidence of pending I-485 or other qualifying application/petition (I-797C receipt notice)
+                  - Evidence supporting reason for travel (e.g., medical records, employment letters, school enrollment, family event documents)
+                  - Passport (biographic page) and any U.S. visa page
+                  - Form I-94 (Arrival/Departure Record)
+                  - Prior Advance Parole documents (front and back), if any
+                  - Proof of identity (government-issued photo ID)
+                  - Proof of current immigration status
+                  - Employment verification letter (if applicable)
+                  - Proof of relationship to family members abroad (if travel reason is family-based)
+                  - Any relevant USCIS notices (I-797)
+                  - Two passport-style photos (per USCIS specifications)
 
                 **Step 2**: Use the following structure for the letter:
                 ```
-                #Petition Cover Letter for H-1B Visa Application – [Beneficiary’s Full Name]
-                **[Employer’s Name]**  
-                **[Employer’s Address]**  
-                **[City, State, ZIP Code]**  
-
-                **Date:** _YYYY-MM-DD_  
-
-                **Subject:** Petition Cover Letter for H-1B Visa Application – [Beneficiary’s Full Name]  
-
-                **Dear USCIS Officer,**  
-
-                **Introduction**  
-                **Parties & Purpose:** “[Employer’s Name] (the “Petitioner”) respectfully submits this cover letter in support of its H-1B petition for **[Beneficiary’s Name]** (the “Beneficiary”).”  
-                **Position Overview:** Title: _[Position Title]_; SOC Code: _[Code]_; Worksite: _[City, State]_  
-                **Statutory Basis:** Requested under INA § 214(i) governing specialty occupations.  
-
-                **Eligibility – Specialty Occupation**  
-                **Degree Requirement:** Position requires at minimum a bachelor’s degree or higher in _[Field of Study]_; Beneficiary holds a _[Degree]_ in _[Field]_ from _[Institution]_ (Date).  
-                **Specialized Duties:**  
-                    Duty 1: _[Describe primary function]_  
-                    Duty 2: _[Describe advanced responsibility requiring theoretical application]_  
-                    Duty 3: _[List any supervisory or collaborative tasks]_  
-                **Alignment with USCIS Policy:**  
-                    Compare job duties to SOC description for code _[Code]_.  
-                    Cite policy memo (e.g., “Matter of Michael Hertz Associates” or AAO precedent).  
-                **Beneficiary’s Qualifications:**  
-                    Prior H-1B (if any): Receipt No. _[Number]_, Approval Date _[Date]_.  
-                    Professional certifications: _[List]_ demonstrating non-routine expertise.  
-
-                **Regulatory & Procedural Compliance**  
-                **Labor Condition Application (LCA):** Certified by Department of Labor on _[Date]_ for wage level _[Level]_ at worksite _[Address]_.  
-                **Public Access File:** Documentation available at the worksite in compliance with 20 C.F.R. § 655.760.  
-                **Maintenance of Status:** Beneficiary’s current status (_[e.g., F-1 OPT]_) valid through _[Date]_; no gap anticipated.  
-                **Dependent Filings (if applicable):** H-4 petitions for _[Spouse/Children]_ filed concurrently (Receipt Nos. _[Numbers]_).  
-
-                **Supporting Evidence & Exhibits**  
-                **Exhibit A:** Beneficiary’s diploma(s) and transcripts (with certified translations).  
-                **Exhibit B:** Detailed resume/CV and letters of employment verification.  
-                **Exhibit C:** Signed job offer letter and comprehensive job description.  
-                **Exhibit D:** Organizational chart showing Beneficiary’s role and reporting structure.  
-                **Exhibit E:** Prevailing Wage Determination (PWD) or certified LCA.  
-                **Exhibit F:** Professional licenses, patents, publications, or conference presentations.  
-
-                **Legal Standard & Precedent**  
-                **Specialty Occupation Test (INA § 214(i)):** Position requires theoretical and practical application of highly specialized knowledge.  
-                **AAO Precedents:** Cite decisions where similar roles were approved (e.g., IT systems analyst, financial analyst).  
-                **Burden of Proof:** Petitioner has met its burden to show Beneficiary’s qualifications and position requirements.  
-
-                **Conclusion & Request for Favorable Adjudication**  
-                “Based on the foregoing, the Petitioner has demonstrated that the Beneficiary qualifies for classification in a specialty occupation under INA § 214(i). Petitioner respectfully requests that USCIS approve this H-1B petition promptly.”  
-                **Point of Contact:** For any questions or additional documentation, please contact **[Employer’s Representative Name]**, **[Title]**, at **[Phone Number]** or **[Email Address]**.  
-
-                **Sincerely,**  
+                **RE: Application for Advance Parole / Travel Authorization (Form I-131)**  
+                **Applicant:** [Insert Full Name of Applicant]  
+                **A-Number:** [Insert A-Number or leave blank]  
+                
+                Dear Sir/Madam:  
+                
+                Please accept the enclosed Form I-131, *Application for Travel Document*, on behalf of [Applicant’s Full Name]. This request seeks Advance Parole / Travel Authorization for [briefly state reason for travel, e.g., humanitarian, employment-related, educational, family emergency], in connection with [Applicant’s] [current status or pending application/petition, e.g., pending Form I-485, Adjustment of Status].  
+                
+                [Applicant’s] current immigration status is [status/class of admission], with an I-94 number of [I-94 Number], most recently admitted to the United States on [Entry Date] at [Port of Entry]. This application is being filed as a(n) [Initial / Renewal] request.  
+                
+                The following documents are enclosed in support of this application:  
+                
+                1. Form G-1145, *E-Notification of Application/Petition Acceptance*  
+                2. Form G-28, *Notice of Entry of Appearance as Attorney* (if represented)  
+                3. Form I-131, *Application for Travel Document*  
+                4. Copy of passport biographic page and U.S. visa (if available)  
+                5. Form I-94, *Arrival/Departure Record*  
+                6. Two passport-style photos (per USCIS specifications)  
+                7. Evidence of pending I-485 or other qualifying petition/application (Form I-797C receipt notice)  
+                8. Supporting documentation for travel reason (e.g., employer letter, medical documentation, family event evidence)  
+                9. Prior Advance Parole document(s) (front and back), if applicable  
+                10. Any other relevant USCIS notices (Form I-797)  
+                
+                We respectfully request favorable adjudication of this application at your earliest convenience. Thank you for your consideration.  
+                
+                **very truly yours,** 
                 \_\_\_\_\_\_\_\_\_\_\_,
-                **[Employer’s Representative Name], [Title]**  
-                **[Company Name]**  
+                **[Attorney/Representative Name], [Title]**  
+                **[Firm/Organization Name]**  
 
-                **cc:** [Attorney’s Name (if applicable)], [Beneficiary], [HR File]  
                 ```
-                Step 3.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
-                Step 4.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
-                Step 5.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
-                Step 6.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
-                Step 7. Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
+                step 3.While selecting data to fill in the placeholders, use only accurate and relevant information from the provided input file or files. If the required information is not available, leave the placeholder blank. Do not attempt to fill placeholders with incorrect or unrelated data.
+                Step 4.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
+                Step 5.In the "Supporting Evidence & Exhibits" section, list only the exhibits for which supporting documents are actually provided in the input. Do not list exhibits that are missing or not provided. Do not include any placeholders or blank entries for missing exhibits. 
+                Step 6.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
+                Step 7.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
+                Step 8.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
+                Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
                 """
             ),
             model="gpt-4.1",
@@ -106,80 +96,79 @@ async def initialize_agents(vector_store_id):
             instructions=(
                 f"""
                 Today’s date is {current_date}.
-                You are tasked with generating a Exhibit List for an H-1B visa application.
-                
-                **Step 1**: Extract all necessary information from the vector store, including:
+                You are tasked with generating a petition cover letter for an Application for Advance Parole / Travel Authorization (Form I-131).
+
+                **Step 1**: Extract all necessary information only from the file provided. Do not use information from previous files or external sources. If any required information is missing, leave the corresponding placeholder blank; do not attempt to fill it with assumptions or unrelated data. This includes:
                 - Personal details of the beneficiary.
                 - Employer details.
                 - Job description and duties.
                 - Supporting evidence such as Form I-129, the H-Classification Supplement, certified LCA, and evidence of degree.
+                - Required forms:
+                  - Form I-131 (Application for Travel Document)
+                  - Form G-28 (Notice of Entry of Appearance as Attorney), if represented
+                  - Form G-1145 (E-Notification of Application/Petition Acceptance)
+                - Supporting documents (include only those present in the provided file set; leave blank otherwise):
+                  - Evidence of pending I-485 or other qualifying application/petition (I-797C receipt notice)
+                  - Evidence supporting reason for travel (e.g., medical records, employment letters, school enrollment, family event documents)
+                  - Passport (biographic page) and any U.S. visa page
+                  - Form I-94 (Arrival/Departure Record)
+                  - Prior Advance Parole documents (front and back), if any
+                  - Proof of identity (government-issued photo ID)
+                  - Proof of current immigration status
+                  - Employment verification letter (if applicable)
+                  - Proof of relationship to family members abroad (if travel reason is family-based)
+                  - Any relevant USCIS notices (I-797)
+                  - Two passport-style photos (per USCIS specifications)
 
                 **Step 2**: Use the following structure for the letter:
                 ```
-                #Petition Cover Letter for H-1B Visa Application – [Beneficiary’s Full Name]
-                **[Employer’s Name]**  
-                **[Employer’s Address]**  
-                **[City, State, ZIP Code]**  
+                                                    Exhibit List  
+                                    Self-Petitioner: [Beneficiary’s Full Name]  
+                                    Position: [Beneficiary’s Position/Title]  
 
-                **Date:** _YYYY-MM-DD_  
+                Exhibit 1:  [Description of Exhibit 1]  
+                Exhibit 2:  [Description of Exhibit 2]  
+                Exhibit 3:  [Description of Exhibit 3]  
+                Exhibit 4:  [Description of Exhibit 4]  
+                Exhibit 5:  [Description of Exhibit 5]  
+                Exhibit 6:  [Description of Exhibit 6]  
+                Exhibit 7:  [Description of Exhibit 7]  
+                Exhibit 8:  [Description of Exhibit 8]  
+                Exhibit 9:  [Description of Exhibit 9]  
+                Exhibit 10: [Description of Exhibit 10]  
+                Exhibit 11: [Description of Exhibit 11]  
+                Exhibit 12: [Description of Exhibit 12]  
+                Exhibit 13: [Description of Exhibit 13]  
+                Exhibit 14: [Description of Exhibit 14]  
+                Exhibit 15: [Description of Exhibit 15]  
+                Exhibit 16: [Description of Exhibit 16]  
+                Exhibit 17: [Description of Exhibit 17]  
+                Exhibit 18: [Description of Exhibit 18]  
+                Exhibit 19: [Description of Exhibit 19]  
+                Exhibit 20: [Description of Exhibit 20]  
+                Exhibit 21: [Description of Exhibit 21]  
+                Exhibit 22: [Description of Exhibit 22]  
+                Exhibit 23: [Description of Exhibit 23]  
+                Exhibit 24: [Description of Exhibit 24]  
+                Exhibit 25: [Description of Exhibit 25]  
+                Exhibit 26: [Description of Exhibit 26]  
+                Exhibit 27: [Description of Exhibit 27]  
+                Exhibit 28: [Description of Exhibit 28]  
+                Exhibit 29: [Description of Exhibit 29]  
+                Exhibit 30: [Description of Exhibit 30]  
+                Exhibit 31: [Description of Exhibit 31]  
+                Exhibit 32: [Description of Exhibit 32]  
+                Exhibit 33: [Description of Exhibit 33]  
+                Exhibit 34: [Description of Exhibit 34]  
 
-                **Subject:** Petition Cover Letter for H-1B Visa Application – [Beneficiary’s Full Name]  
-
-                **Dear USCIS Officer,**  
-
-                **Introduction**  
-                **Parties & Purpose:** “[Employer’s Name] (the “Petitioner”) respectfully submits this cover letter in support of its H-1B petition for **[Beneficiary’s Name]** (the “Beneficiary”).”  
-                **Position Overview:** Title: _[Position Title]_; SOC Code: _[Code]_; Worksite: _[City, State]_  
-                **Statutory Basis:** Requested under INA § 214(i) governing specialty occupations.  
-
-                **Eligibility – Specialty Occupation**  
-                **Degree Requirement:** Position requires at minimum a bachelor’s degree or higher in _[Field of Study]_; Beneficiary holds a _[Degree]_ in _[Field]_ from _[Institution]_ (Date).  
-                **Specialized Duties:**  
-                    Duty 1: _[Describe primary function]_  
-                    Duty 2: _[Describe advanced responsibility requiring theoretical application]_  
-                    Duty 3: _[List any supervisory or collaborative tasks]_  
-                **Alignment with USCIS Policy:**  
-                    Compare job duties to SOC description for code _[Code]_.  
-                    Cite policy memo (e.g., “Matter of Michael Hertz Associates” or AAO precedent).  
-                **Beneficiary’s Qualifications:**  
-                    Prior H-1B (if any): Receipt No. _[Number]_, Approval Date _[Date]_.  
-                    Professional certifications: _[List]_ demonstrating non-routine expertise.  
-
-                **Regulatory & Procedural Compliance**  
-                **Labor Condition Application (LCA):** Certified by Department of Labor on _[Date]_ for wage level _[Level]_ at worksite _[Address]_.  
-                **Public Access File:** Documentation available at the worksite in compliance with 20 C.F.R. § 655.760.  
-                **Maintenance of Status:** Beneficiary’s current status (_[e.g., F-1 OPT]_) valid through _[Date]_; no gap anticipated.  
-                **Dependent Filings (if applicable):** H-4 petitions for _[Spouse/Children]_ filed concurrently (Receipt Nos. _[Numbers]_).  
-
-                **Supporting Evidence & Exhibits**  
-                **Exhibit A:** Beneficiary’s diploma(s) and transcripts (with certified translations).  
-                **Exhibit B:** Detailed resume/CV and letters of employment verification.  
-                **Exhibit C:** Signed job offer letter and comprehensive job description.  
-                **Exhibit D:** Organizational chart showing Beneficiary’s role and reporting structure.  
-                **Exhibit E:** Prevailing Wage Determination (PWD) or certified LCA.  
-                **Exhibit F:** Professional licenses, patents, publications, or conference presentations.  
-
-                **Legal Standard & Precedent**  
-                **Specialty Occupation Test (INA § 214(i)):** Position requires theoretical and practical application of highly specialized knowledge.  
-                **AAO Precedents:** Cite decisions where similar roles were approved (e.g., IT systems analyst, financial analyst).  
-                **Burden of Proof:** Petitioner has met its burden to show Beneficiary’s qualifications and position requirements.  
-
-                **Conclusion & Request for Favorable Adjudication**  
-                “Based on the foregoing, the Petitioner has demonstrated that the Beneficiary qualifies for classification in a specialty occupation under INA § 214(i). Petitioner respectfully requests that USCIS approve this H-1B petition promptly.”  
-                **Point of Contact:** For any questions or additional documentation, please contact **[Employer’s Representative Name]**, **[Title]**, at **[Phone Number]** or **[Email Address]**.  
-
-                **Sincerely,**  
-                \_\_\_\_\_\_\_\_\_\_\_,
-                **[Employer’s Representative Name], [Title]**  
-                **[Company Name]**  
-
-                **cc:** [Attorney’s Name (if applicable)], [Beneficiary], [HR File]  
                 ```
-                Step 3.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
-                Step 4.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
-                Step 5.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
-                Step 6.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
-                Step 7. Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
+                step 3.While selecting data to fill in the placeholders, use only accurate and relevant information from the provided input file or files. If the required information is not available, leave the placeholder blank. Do not attempt to fill placeholders with incorrect or unrelated data.
+                Step 4.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
+                Step 5.In the "Supporting Evidence & Exhibits" section, list only the exhibits for which supporting documents are actually provided in the input. Do not list exhibits that are missing or not provided. Do not include any placeholders or blank entries for missing exhibits. 
+                Step 6.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
+                Step 7.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
+                Step 8.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
+                Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
                 """
             ),
             model="gpt-4.1",
@@ -197,83 +186,75 @@ async def initialize_agents(vector_store_id):
             instructions=(
                 f"""
                 Today’s date is {current_date}.
-                You are tasked with generating an employer support letter for an H-1B visa application.
+                You are tasked with generating a petition cover letter for an Application for Advance Parole / Travel Authorization (Form I-131).
 
-                **Step 1**: Extract all necessary information from the vector store, including:
+                **Step 1**: Extract all necessary information only from the file provided. Do not use information from previous files or external sources. If any required information is missing, leave the corresponding placeholder blank; do not attempt to fill it with assumptions or unrelated data. This includes:
+                - Personal details of the beneficiary.
                 - Employer details.
                 - Job description and duties.
-                - Relevance of the beneficiary’s degree to the job.
-                - Salary details and justification.
-                - Supporting evidence such as certified LCA and employer-provided letters.
+                - Supporting evidence such as Form I-129, the H-Classification Supplement, certified LCA, and evidence of degree.
+                - Required forms:
+                  - Form I-131 (Application for Travel Document)
+                  - Form G-28 (Notice of Entry of Appearance as Attorney), if represented
+                  - Form G-1145 (E-Notification of Application/Petition Acceptance)
+                - Supporting documents (include only those present in the provided file set; leave blank otherwise):
+                  - Evidence of pending I-485 or other qualifying application/petition (I-797C receipt notice)
+                  - Evidence supporting reason for travel (e.g., medical records, employment letters, school enrollment, family event documents)
+                  - Passport (biographic page) and any U.S. visa page
+                  - Form I-94 (Arrival/Departure Record)
+                  - Prior Advance Parole documents (front and back), if any
+                  - Proof of identity (government-issued photo ID)
+                  - Proof of current immigration status
+                  - Employment verification letter (if applicable)
+                  - Proof of relationship to family members abroad (if travel reason is family-based)
+                  - Any relevant USCIS notices (I-797)
+                  - Two passport-style photos (per USCIS specifications)
 
                 **Step 2**: Use the following structure for the letter:
                 ```
-                #Employer Support Letter for H-1B Visa Application – [Beneficiary’s Full Name]
-                **[Employer’s Name]**  
-                **[Employer’s Address]**  
-                **[City, State, ZIP Code]**  
-
-                **Date:** _YYYY-MM-DD_  
-
-                **Subject:** Employer Support Letter for H-1B Visa Application – [Beneficiary’s Full Name]  
-
-                **Dear USCIS Officer,**  
-
-                **Introduction**  
-                **Parties & Purpose:** “[Employer’s Name] (the “Petitioner”) respectfully submits this Employer Support Letter on behalf of **[Beneficiary’s Name]** (the “Beneficiary”) in support of its H-1B petition.”  
-                **Position Summary:** Title: _[Position Title]_; SOC Code: _[Code]_; Location(s): _[City, State]_.  
-                **Statutory Framework:** Requested classification under INA § 214(i) for specialty occupations.  
-
-                **Job Details**  
-                **Duties & Responsibilities:**  
-                    **Primary Duties:**  
-                    1. _[Describe specialized analytical/design/programming duty requiring theoretical knowledge]_  
-                    2. _[Describe project leadership or cross-functional coordination tasks]_  
-                    **Secondary Duties:**  
-                     _[List supportive tasks that nonetheless require degree-level skills]_  
-                **Specialty Occupation Justification:**  
-                    Demonstrates application of specialized knowledge in _[field]_ consistent with SOC Code _[Code]_ description.  
-                    Duties require at least a bachelor’s degree in _[Field]_ (e.g., complex data modeling, software architecture).  
-
-                **Degree Relevance**  
-                **Beneficiary’s Academic Credentials:**  
-                    _[Degree Type] in [Field]_ from _[University]_ (Date).  
-                    Honors, thesis title, accreditation status.  
-                **Direct Correlation to Duties:**  
-                    Coursework in _[Key Subjects]_ equips Beneficiary to perform _[Duty #1]_.  
-                    Specialized training in _[Tool/Method]_ essential for _[Duty #2]_.  
-                **Policy Alignment:**  
-                    Cite AAO decision or policy memo (e.g., “Matter of Michael Hertz Associates”) confirming degree-to-duty nexus.  
-
-                **Salary and Need**  
-                **Offered Salary:**  
-                    Annual wage: _$[Amount]_ (at or above prevailing wage level _[Level]_ as per LCA certified _[Date]_).  
-                    Overtime/bonus structure (if applicable).  
-                **Business Justification:**  
-                    Role critical for _[project/client name]_, directly impacting revenue of _$[Amount]_ per quarter.  
-                    Lack of qualified U.S. applicants necessitates hiring the Beneficiary to meet specialized technical/manufacturing/service demands.  
-                **Labor Condition Application (LCA) Compliance:**  
-                    LCA certified by DOL on _[Date]_; public access file maintained per 20 C.F.R. § 655.760.  
-
-                **Conclusion & Request**  
-                **Eligibility Confirmation:** “Beneficiary’s specialized degree and experience clearly satisfy the requirements of a specialty occupation under INA § 214(i).”  
-                **Request for Approval:** “Petitioner respectfully requests that USCIS approve the H-1B petition for **[Beneficiary’s Name]** at its earliest convenience.”  
-                **Point of Contact:** “For any questions or additional information, please contact **[Employer’s Representative Name]**, **[Title]**, at **[Phone Number]** or **[Email Address]**.”  
-
-                **Sincerely,**  
-                \_\_\_\_\_\_\_\_\_\_\_, 
-                **[Employer’s Representative Name], [Title]**  
-                **[Company Name]**  
-
-                **cc:** [Attorney’s Name (if applicable)], [Beneficiary], [HR File]  
+                **RE: Eligibility Memorandum in Support of Application for Advance Parole / Travel Authorization (Form I-131)**  
+                **Applicant:** [Insert Full Name of Applicant]  
+                **A-Number:** [Insert A-Number or leave blank]  
+                
+                Dear Sir/Madam:  
+                
+                This memorandum is submitted in support of [Applicant’s Full Name]’s Form I-131, *Application for Travel Document*, seeking Advance Parole / Travel Authorization. The purpose of this memorandum is to outline the applicant’s immigration background, establish eligibility for Advance Parole under applicable regulations, and summarize the evidence provided.  
+                
+                **Background**  
+                [Applicant’s Full Name] is currently in [status/class of admission], with an I-94 number of [I-94 Number], last admitted to the United States on [Entry Date] at [Port of Entry]. The applicant has a [pending Form I-485 / other qualifying application or petition] filed with USCIS under receipt number [Receipt Number], which serves as the basis for eligibility.  
+                
+                **Eligibility Basis**  
+                Pursuant to 8 CFR 223, the applicant is eligible to request Advance Parole as [brief statement of eligibility — e.g., an applicant for adjustment of status under INA §245]. The requested travel authorization is sought for [reason for travel, e.g., humanitarian, employment, education, family-related] and is supported by the enclosed documentation.  
+                
+                **Enclosures in Support of This Memorandum**  
+                1. Form I-131, *Application for Travel Document*  
+                2. Form G-1145, *E-Notification of Application/Petition Acceptance*  
+                3. Form G-28, *Notice of Entry of Appearance as Attorney* (if represented)  
+                4. Copy of passport biographic page and U.S. visa (if available)  
+                5. Form I-94, *Arrival/Departure Record*  
+                6. Two passport-style photos (per USCIS specifications)  
+                7. Evidence of pending I-485 or other qualifying petition/application (Form I-797C receipt notice)  
+                8. Supporting documentation for reason for travel (e.g., employer letter, medical documentation, family event evidence)  
+                9. Prior Advance Parole document(s) (front and back), if applicable  
+                10. Any other relevant USCIS notices (Form I-797)  
+                
+                **Conclusion**  
+                Based on the information provided and the supporting evidence submitted, [Applicant’s Full Name] meets the eligibility requirements for Advance Parole / Travel Authorization. We respectfully request favorable adjudication of this application.  
+                
+                **very truly yours,** 
+                \_\_\_\_\_\_\_\_\_\_\_,
+                **[Attorney/Representative Name], [Title]**  
+                **[Firm/Organization Name]** 
 
                 ```
 
-                Step 3.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
-                Step 4.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
-                Step 5.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
-                Step 6.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file .
-                Step 7. Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
+                step 3.While selecting data to fill in the placeholders, use only accurate and relevant information from the provided input file or files. If the required information is not available, leave the placeholder blank. Do not attempt to fill placeholders with incorrect or unrelated data.
+                Step 4.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
+                Step 5.In the "Supporting Evidence & Exhibits" section, list only the exhibits for which supporting documents are actually provided in the input. Do not list exhibits that are missing or not provided. Do not include any placeholders or blank entries for missing exhibits. 
+                Step 6.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
+                Step 7.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
+                Step 8.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
+                Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
                 """
             ),
             model="gpt-4.1",
@@ -291,75 +272,69 @@ async def initialize_agents(vector_store_id):
             instructions=(
                 f"""
                 Today’s date is {current_date}.
-                You are tasked with generating an LCA memorandum for an H-1B visa application.
+                You are tasked with generating a petition cover letter for an Application for Advance Parole / Travel Authorization (Form I-131).
 
-                **Step 1**: Extract all necessary information from the vector store, including:
-                - Certified LCA.
-                - Prevailing wage documentation.
-                - Public-access files.
+                **Step 1**: Extract all necessary information only from the file provided. Do not use information from previous files or external sources. If any required information is missing, leave the corresponding placeholder blank; do not attempt to fill it with assumptions or unrelated data. This includes:
+                - Personal details of the beneficiary.
+                - Employer details.
+                - Job description and duties.
+                - Supporting evidence such as Form I-129, the H-Classification Supplement, certified LCA, and evidence of degree.
+                - Required forms:
+                  - Form I-131 (Application for Travel Document)
+                  - Form G-28 (Notice of Entry of Appearance as Attorney), if represented
+                  - Form G-1145 (E-Notification of Application/Petition Acceptance)
+                - Supporting documents (include only those present in the provided file set; leave blank otherwise):
+                  - Evidence of pending I-485 or other qualifying application/petition (I-797C receipt notice)
+                  - Evidence supporting reason for travel (e.g., medical records, employment letters, school enrollment, family event documents)
+                  - Passport (biographic page) and any U.S. visa page
+                  - Form I-94 (Arrival/Departure Record)
+                  - Prior Advance Parole documents (front and back), if any
+                  - Proof of identity (government-issued photo ID)
+                  - Proof of current immigration status
+                  - Employment verification letter (if applicable)
+                  - Proof of relationship to family members abroad (if travel reason is family-based)
+                  - Any relevant USCIS notices (I-797)
+                  - Two passport-style photos (per USCIS specifications)
 
-                **Step 2**: Use the following structure for the memorandum:
+                **Step 2**: Use the following structure for the letter:
                 ```
-                #Labor Condition Application (LCA) Memorandum for H-1B Visa Application – [Beneficiary’s Full Name]
-                **[Employer’s Name]**  
-                **[Employer’s Address]**  
-                **[City, State, ZIP Code]**  
-
-                **Date:** _YYYY-MM-DD_  
-
-                **Subject:** LCA Memorandum for H-1B Visa Application – [Beneficiary’s Full Name]  
-
-                **Dear USCIS Officer,**  
-
-                **Introduction**  
-                **Parties & Purpose:** “[Employer’s Name] (the “Petitioner”) submits this Labor Condition Application (LCA) Memorandum in support of its H-1B petition for **[Beneficiary’s Name]** (the “Beneficiary”).”  
-                **Statutory Authority:** LCA filed under INA § 212(n) and 20 C.F.R. Part 655, Subpart H, to ensure compliance with prevailing wage and public disclosure requirements.  
-                **Position Summary:** Title: _[Position Title]_; SOC Code: _[Code]_; Worksite: _[City, State]_.  
-
-                **Prevailing Wage Determination**  
-                 **Wage Source & Level:**  
-                     Prevailing wage obtained from the Department of Labor’s Online Wage Library or independent wage survey (e.g., Bureau of Labor Statistics OES data) for SOC Code _[Code]_ in _[Metropolitan Area]_.  
-                     Selected Wage Level: _[Level]_ (per 20 C.F.R. § 655.731).  
-                 **Calculation Methodology:**  
-                     Cross‐referenced DOL’s Occupational Employment Statistics with proprietary survey data to confirm median wage.  
-                     Adjusted for geographic differential using BLS locality pay percentages.  
-                 **Supporting Documents:**  
-                     **Exhibit A:** DOL Prevailing Wage Determination notice (PWD Case No. _[Number]_) dated _[Date]_.  
-                     **Exhibit B:** Copy of proprietary wage survey report (with methodology summary).  
-                     **Exhibit C:** LCA certified by the Department of Labor on _[Date]_ (Case No. _[Number]_).  
-
-                **Public-Disclosure Compliance**  
-                  **Posting Requirements:**  
-                     Posted LCA notice at the worksite and alternative worksites for 10 consecutive business days as required by 20 C.F.R. § 655.734.  
-                     Notices included job title, SOC code, wage rate, and contact information for the Employer’s Representative.  
-                **Internal Notice:**  
-                    Provided notice to bargaining representative (if any) or, in absence thereof, posted notice where other employees in similar occupations are employed.  
-                **Public Access File:**  
-                    Maintained at the worksite, available for public inspection, containing:  
-                    1. Certified LCA and supporting PWD.  
-                    2. Documentation of wage postings and internal notices.  
-                    3. Beneficiary’s wage rate and period of employment.  
-                    4. Evidence of business necessity for alternate worksites (if applicable).  
-                    **Exhibit D:** Index to Public Access File contents with dates and locations of postings.  
-
-                **Conclusion & Certification**  
-                **Compliance Statement:** “Petitioner confirms full compliance with all LCA requirements under INA § 212(n) and 20 C.F.R. Part 655, Subpart H, including accurate prevailing wage determination and public disclosure.”  
-                **Record Retention:** Employer will retain the Public Access File for at least one year beyond the period of employment as required by 20 C.F.R. § 655.760.  
-                **Point of Contact:** “For any questions or review of the Public Access File, please contact **[Employer’s Representative Name]**, **[Title]**, at **[Phone Number]** or **[Email Address]**.”  
-
-                **Sincerely,**  
-                \_\_\_\_\_\_\_\_\_\_\_, 
-                **[Employer’s Representative Name], [Title]**  
-                **[Company Name]**  
-
-                **cc:** [Attorney’s Name (if applicable)], [HR Compliance File], [Public Access File Index]  
+                **RE: Evidence – Organization Chart in Support of Application for Advance Parole / Travel Authorization (Form I-131)**  
+                **Applicant:** [Insert Full Name of Applicant]  
+                **A-Number:** [Insert A-Number or leave blank]  
+                
+                Dear Sir/Madam:  
+                
+                Please find enclosed the organizational chart of [Company/Organization Name] in support of [Applicant’s Full Name]’s Form I-131, *Application for Travel Document*. This evidence is submitted to demonstrate the applicant’s position within the company, the reporting hierarchy, and the connection between the applicant’s role and the need for travel authorization.  
+                
+                **Purpose of Submission**  
+                The organizational chart illustrates:  
+                - The applicant’s current or proposed role within the company.  
+                - Reporting lines and supervisory relationships.  
+                - Departmental structure and the applicant’s relation to other personnel.  
+                - How the applicant’s position and duties support the basis for the requested Advance Parole.  
+                
+                **Enclosures in Support of This Evidence**  
+                1. Company organizational chart identifying the applicant’s position.  
+                2. Legend or key explaining titles, reporting lines, and departments (if not clearly labeled).  
+                3. Supporting documentation (if available in the provided file set), such as:  
+                   - Job description corresponding to the position shown.  
+                   - Employer letter confirming the role, duties, and travel need.  
+                   - Relevant USCIS notices or employment verification records.  
+                
+                We respectfully submit this organizational chart and related evidence to assist USCIS in understanding [Applicant’s Full Name]’s position within [Company/Organization Name] and its relevance to the Advance Parole request.  
+                
+                **very truly yours,** 
+                \_\_\_\_\_\_\_\_\_\_\_,
+                **[Attorney/Representative Name], [Title]**  
+                **[Firm/Organization Name]**  
                 ```
-
-                Step 3.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
-                Step 4.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
-                Step 5.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
-                Step 6.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file .
-                Step 7. Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
+                step 3.While selecting data to fill in the placeholders, use only accurate and relevant information from the provided input file or files. If the required information is not available, leave the placeholder blank. Do not attempt to fill placeholders with incorrect or unrelated data.
+                Step 4.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
+                Step 5.In the "Supporting Evidence & Exhibits" section, list only the exhibits for which supporting documents are actually provided in the input. Do not list exhibits that are missing or not provided. Do not include any placeholders or blank entries for missing exhibits. 
+                Step 6.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
+                Step 7.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
+                Step 8.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
+                Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
                 """
             ),
             model="gpt-4.1",
@@ -379,9 +354,6 @@ async def generate_document(file_type, agents):
     """
     Generate a single document using the corresponding agent.
     
-    Args:
-        file_type (str): The type of document to generate (e.g., "petition_cover_letter").
-        agents (dict): Dictionary of initialized agents.
     """
     agent = agents.get(file_type)
     if agent:
