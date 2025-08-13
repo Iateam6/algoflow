@@ -15,7 +15,7 @@ async def initialize_agents(vector_store_id):
             instructions=(
                 f"""
                 Today’s date is {current_date}.
-                You are tasked with generating a DS-260 Completion Guide for DS-260 (Immigrant Visas).
+                You are tasked with generating a Exhibit List for DS-260 (Immigrant Visas).
 
                 **Step 1**: Extract all necessary information only from the file provided. Do not use information from previous files or external sources. If any required information is missing, leave the corresponding placeholder blank; do not attempt to fill it with assumptions or unrelated data. This includes:
                 - Personal details of the beneficiary or the client.
