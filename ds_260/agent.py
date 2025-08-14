@@ -236,8 +236,8 @@ async def initialize_agents(vector_store_id):
                 ),
             ],
         ),
-        "Document‐Upload Memo": Agent(
-            name="Document‐Upload Memo Agent",
+        "Document-Upload Memo": Agent(
+            name="Document-Upload Memo Agent",
             instructions=(
                 f"""
                 Today’s date is {current_date}.
