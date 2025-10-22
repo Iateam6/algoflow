@@ -13,7 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .utils import handle_doc_generation
 
 def index(request):
-    return HttpResponse('Welcome to Application for Employment Authorization (I-765) API!')
+    return HttpResponse('Welcome to Application for Employment Authorization (I-765)/EAD API!')
 
 @csrf_exempt
 def generate_doc(request):

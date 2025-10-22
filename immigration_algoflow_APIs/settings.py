@@ -21,8 +21,13 @@ SECRET_KEY = "django-insecure-0p+wz2#5h1bsxcb84+7b)i9)gp)+r1bx#)-b+8mr-2k6ip_(($
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
+#CORS configuration
+CORS_ALLOWED_ORIGINS = [
+    "https://algoflow.visa26.com/",
+    "https://app.visa26.com",
+]
 
 # Application definition
 
@@ -40,6 +45,7 @@ INSTALLED_APPS = [
     "ds_260",
     "eb_1aA",
     "eb_1aB",
+    "final_copy",
     "naturalization",
     "reentry_permit",
 
@@ -81,9 +87,8 @@ WSGI_APPLICATION = "immigration_algoflow_APIs.wsgi.application"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+        'ENGINE': 'django.db.backends.dummy'
     }
 }
 

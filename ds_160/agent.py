@@ -10,179 +10,239 @@ async def initialize_agents(vector_store_id):
     current_date = datetime.now().strftime("%B %#d, %Y")
 
     return {
-        "Petition Cover Letter": Agent(
-            name="Petition Cover Letter Agent",
+        "DS-160 Completion Guide": Agent(
+            name="DS-160 Completion Guide Agent",
             instructions=(
                 f"""
                 Today’s date is {current_date}.
-                You are tasked with generating a petition cover letter for an H-1B visa application.
+                You are tasked with generating a DS-160 Interview Cheat-Sheet for DS-160 (Nonimmigrant Visas) application.
+
+                **Step 1**: Extract all necessary information only from the file provided. Do not use information from previous files or external sources. If any required information is missing, leave the corresponding placeholder blank; do not attempt to fill it with assumptions or unrelated data. This includes:
+                - Personal details of the beneficiary or the client.
+                - Employer details.
+                - Job description and duties.
+                - Required forms:
+                     - Form DS-160, Online Nonimmigrant Visa Application
+                - Supporting documents:
+                    - Passport (valid for at least six months beyond the intended stay)
+                    - Photo meeting DS-160 requirements
+                    - Travel Itinerary
+                    - Resume/CV
+                    - DS-160 Confirmation Page
+
+                **Step 2**: Use the following structure for the letter:
+                ``` 
+                ## DS‑160 Completion Guide
+
+                **Passport Details**  
+                Ensure the applicant provides a valid passport biographical page, bearing full name, date of birth, passport number, country of issuance, and expiration date. The passport must remain valid for at least six months beyond the intended U.S. stay (unless exempt by bilateral agreement). Accurate transcription into the DS‑160 is critical to avoid matching errors during reciprocity or entry. If any passport fields are missing in the source file (e.g. issue date or controlling authority), leave those entries blank rather than guessing.
+
+                **Travel Itinerary**  
+                If travel dates, intended U.S. departure and return plans, cities, or purpose of visit are provided, summarize them clearly. Include flight details if available. If no itinerary was included in the DS‑160 file, leave this section blank—do not assume destination or duration. Accurate itinerary detail helps demonstrate intent of temporary stay and supports the consular understanding of trip planning.
+
+                **Previous U.S. Travel History**  
+                List any prior visits to the U.S., including dates of entry and exit, visa types used, or prior refusals or overstays if documented. This section helps consular officers assess patterns of compliance or risk. If the DS‑160-derived file lacks travel history information, omit this section entirely to avoid imprinting unverified values and triggering inconsistencies.
+
+                **Education and Employment History**  
+                Provide details of the applicant’s education and employment over the past few years as captured in DS‑160: institutions attended, degrees earned, current and former employers, job titles, and dates. These details support evaluation of eligibility for visa categories like F, J, M, work, or business types. If fields are omitted in the source, leave them blank.
+
+                **Social Media Usernames**  
+                As of mid‑2025, applicants—including those applying for F, M, and J visas—must list **all** usernames or handles used on social media platforms in the past five years (e.g. Facebook, Instagram, LinkedIn, YouTube, X, Reddit, Tumblr, etc.). If applicants used platforms in the past five years, these identifiers must be entered even if accounts are inactive or deleted. Set these accounts to public during application review if required. If no platforms were used, the applicant may enter "None."
+
+                **Digital Photo Requirements**  
+                Confirm that a compliant photo file was uploaded with the DS‑160. The photo must meet U.S. visa specs: white background, 2×2 inches, head size between 50–69% of frame, neutral expression. If the original file lacks photo metadata, leave this placeholder blank and note that a valid digital photo must still be provided before submission.
+
+                **DS‑160 Confirmation Page**  
+                Ensure extraction of the confirmation barcode page details: application ID number, barcode, and date of submission. This page is required during the visa interview. If missing in the provided DS‑160 data, leave it blank, but highlight that the confirmation page must be printed and brought to the consular appointment.
+
+
+                ```
+                step 3.While selecting data to fill in the placeholders, use only accurate and relevant information from the provided input file or files. If the required information is not available, leave the placeholder blank. Do not attempt to fill placeholders with incorrect or unrelated data.
+                Step 4.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
+                Step 5.In the "Supporting Evidence & Exhibits" section, list only the exhibits for which supporting documents are actually provided in the input. Do not list exhibits that are missing or not provided. Do not include any placeholders or blank entries for missing exhibits. 
+                Step 6.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
+                Step 7.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
+                Step 8.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
+                Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
+
+                """
+            ),
+            model="gpt-4.1",
+            model_settings=ModelSettings(temperature=0.7),
+            tools=[
+                WebSearchTool(),
+                FileSearchTool(
+                    max_num_results=50,
+                    vector_store_ids=[vector_store_id],
+                ),
+            ],
+        ),
+        "Exhibit List": Agent(
+            name="Exhibit List Agent",
+            instructions=(
+                f"""
+                Today’s date is {current_date}.
+                You are tasked with generating a Exhibit List for DS-160 (Nonimmigrant Visas) application.
+
+                **Step 1**: Extract all necessary information only from the file provided. Do not use information from previous files or external sources. If any required information is missing, leave the corresponding placeholder blank; do not attempt to fill it with assumptions or unrelated data. This includes:
+                - Personal details of the beneficiary or the client.
+                - Employer details.
+                - Job description and duties.
+                - Required forms:
+                     - Form DS-160, Online Nonimmigrant Visa Application
+                - Supporting documents:
+                    - Passport (valid for at least six months beyond the intended stay)
+                    - Photo meeting DS-160 requirements
+                    - Travel Itinerary
+                    - Resume/CV
+                    - DS-160 Confirmation Page
+
+                **Step 2**: Use the following structure for the letter:
+                ``` 
+                                                   Exhibit List  
+                                    Self-Petitioner: [Beneficiary’s Full Name]  
+                                    Position: [Beneficiary’s Position/Title]  
+
+                Exhibit 1:  [Description of Exhibit 1]  
+                Exhibit 2:  [Description of Exhibit 2]  
+                Exhibit 3:  [Description of Exhibit 3]  
+                Exhibit 4:  [Description of Exhibit 4]  
+                Exhibit 5:  [Description of Exhibit 5]  
+                Exhibit 6:  [Description of Exhibit 6]  
+                Exhibit 7:  [Description of Exhibit 7]  
+                Exhibit 8:  [Description of Exhibit 8]  
+                Exhibit 9:  [Description of Exhibit 9]  
+                Exhibit 10: [Description of Exhibit 10]  
+                Exhibit 11: [Description of Exhibit 11]  
+                Exhibit 12: [Description of Exhibit 12]  
+                Exhibit 13: [Description of Exhibit 13]  
+                Exhibit 14: [Description of Exhibit 14]  
+                Exhibit 15: [Description of Exhibit 15]  
+                Exhibit 16: [Description of Exhibit 16]  
+                Exhibit 17: [Description of Exhibit 17]  
+                Exhibit 18: [Description of Exhibit 18]  
+                Exhibit 19: [Description of Exhibit 19]  
+                Exhibit 20: [Description of Exhibit 20]  
+                Exhibit 21: [Description of Exhibit 21]  
+                Exhibit 22: [Description of Exhibit 22]  
+                Exhibit 23: [Description of Exhibit 23]  
+                Exhibit 24: [Description of Exhibit 24]  
+                Exhibit 25: [Description of Exhibit 25]  
+                Exhibit 26: [Description of Exhibit 26]  
+                Exhibit 27: [Description of Exhibit 27]  
+                Exhibit 28: [Description of Exhibit 28]  
+                Exhibit 29: [Description of Exhibit 29]  
+                Exhibit 30: [Description of Exhibit 30]  
+                Exhibit 31: [Description of Exhibit 31]  
+                Exhibit 32: [Description of Exhibit 32]  
+                Exhibit 33: [Description of Exhibit 33]  
+                Exhibit 34: [Description of Exhibit 34] 
                 
-                **Step 1**: Extract all necessary information from the vector store, including:
-                - Personal details of the beneficiary.
-                - Employer details.
-                - Job description and duties.
-                - Supporting evidence such as Form I-129, the H-Classification Supplement, certified LCA, and evidence of degree.
-
-                **Step 2**: Use the following structure for the letter:
                 ```
-                #Petition Cover Letter for H-1B Visa Application – [Beneficiary’s Full Name]
-                **[Employer’s Name]**  
-                **[Employer’s Address]**  
-                **[City, State, ZIP Code]**  
+                step 3.While selecting data to fill in the placeholders, use only accurate and relevant information from the provided input file or files. If the required information is not available, leave the placeholder blank. Do not attempt to fill placeholders with incorrect or unrelated data.
+                Step 4.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
+                Step 5.In the "Supporting Evidence & Exhibits" section, list only the exhibits for which supporting documents are actually provided in the input. Do not list exhibits that are missing or not provided. Do not include any placeholders or blank entries for missing exhibits. 
+                Step 6.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
+                Step 7.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
+                Step 8.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
+                Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
 
-                **Date:** _YYYY-MM-DD_  
-
-                **Subject:** Petition Cover Letter for H-1B Visa Application – [Beneficiary’s Full Name]  
-
-                **Dear USCIS Officer,**  
-
-                **Introduction**  
-                **Parties & Purpose:** “[Employer’s Name] (the “Petitioner”) respectfully submits this cover letter in support of its H-1B petition for **[Beneficiary’s Name]** (the “Beneficiary”).”  
-                **Position Overview:** Title: _[Position Title]_; SOC Code: _[Code]_; Worksite: _[City, State]_  
-                **Statutory Basis:** Requested under INA § 214(i) governing specialty occupations.  
-
-                **Eligibility – Specialty Occupation**  
-                **Degree Requirement:** Position requires at minimum a bachelor’s degree or higher in _[Field of Study]_; Beneficiary holds a _[Degree]_ in _[Field]_ from _[Institution]_ (Date).  
-                **Specialized Duties:**  
-                    Duty 1: _[Describe primary function]_  
-                    Duty 2: _[Describe advanced responsibility requiring theoretical application]_  
-                    Duty 3: _[List any supervisory or collaborative tasks]_  
-                **Alignment with USCIS Policy:**  
-                    Compare job duties to SOC description for code _[Code]_.  
-                    Cite policy memo (e.g., “Matter of Michael Hertz Associates” or AAO precedent).  
-                **Beneficiary’s Qualifications:**  
-                    Prior H-1B (if any): Receipt No. _[Number]_, Approval Date _[Date]_.  
-                    Professional certifications: _[List]_ demonstrating non-routine expertise.  
-
-                **Regulatory & Procedural Compliance**  
-                **Labor Condition Application (LCA):** Certified by Department of Labor on _[Date]_ for wage level _[Level]_ at worksite _[Address]_.  
-                **Public Access File:** Documentation available at the worksite in compliance with 20 C.F.R. § 655.760.  
-                **Maintenance of Status:** Beneficiary’s current status (_[e.g., F-1 OPT]_) valid through _[Date]_; no gap anticipated.  
-                **Dependent Filings (if applicable):** H-4 petitions for _[Spouse/Children]_ filed concurrently (Receipt Nos. _[Numbers]_).  
-
-                **Supporting Evidence & Exhibits**  
-                **Exhibit A:** Beneficiary’s diploma(s) and transcripts (with certified translations).  
-                **Exhibit B:** Detailed resume/CV and letters of employment verification.  
-                **Exhibit C:** Signed job offer letter and comprehensive job description.  
-                **Exhibit D:** Organizational chart showing Beneficiary’s role and reporting structure.  
-                **Exhibit E:** Prevailing Wage Determination (PWD) or certified LCA.  
-                **Exhibit F:** Professional licenses, patents, publications, or conference presentations.  
-
-                **Legal Standard & Precedent**  
-                **Specialty Occupation Test (INA § 214(i)):** Position requires theoretical and practical application of highly specialized knowledge.  
-                **AAO Precedents:** Cite decisions where similar roles were approved (e.g., IT systems analyst, financial analyst).  
-                **Burden of Proof:** Petitioner has met its burden to show Beneficiary’s qualifications and position requirements.  
-
-                **Conclusion & Request for Favorable Adjudication**  
-                “Based on the foregoing, the Petitioner has demonstrated that the Beneficiary qualifies for classification in a specialty occupation under INA § 214(i). Petitioner respectfully requests that USCIS approve this H-1B petition promptly.”  
-                **Point of Contact:** For any questions or additional documentation, please contact **[Employer’s Representative Name]**, **[Title]**, at **[Phone Number]** or **[Email Address]**.  
-
-                **Sincerely,**  
-                \_\_\_\_\_\_\_\_\_\_\_,
-                **[Employer’s Representative Name], [Title]**  
-                **[Company Name]**  
-
-                **cc:** [Attorney’s Name (if applicable)], [Beneficiary], [HR File]  
-                ```
-                Step 3.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
-                Step 4.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
-                Step 5.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
-                Step 6.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
-                Step 7. Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
                 """
             ),
             model="gpt-4.1",
-            model_settings=ModelSettings(temperature=0.9),
+            model_settings=ModelSettings(temperature=0.7),
             tools=[
                 WebSearchTool(),
                 FileSearchTool(
-                    max_num_results=5,
+                    max_num_results=50,
                     vector_store_ids=[vector_store_id],
                 ),
             ],
         ),
-        "Employer Support Letter": Agent(
-            name="Employer Support Letter Agent",
+        "Interview Cheat-Sheet": Agent(
+            name="Interview Cheat-Sheet Agent",
             instructions=(
                 f"""
                 Today’s date is {current_date}.
-                You are tasked with generating an employer support letter for an H-1B visa application.
+                You are tasked with generating a  Interview Cheat-Sheet for DS-160 (Nonimmigrant Visas) application.
 
-                **Step 1**: Extract all necessary information from the vector store, including:
+                **Step 1**: Extract all necessary information only from the file provided. Do not use information from previous files or external sources. If any required information is missing, leave the corresponding placeholder blank; do not attempt to fill it with assumptions or unrelated data. This includes:
+                - Personal details of the beneficiary or the client.
                 - Employer details.
                 - Job description and duties.
-                - Relevance of the beneficiary’s degree to the job.
-                - Salary details and justification.
-                - Supporting evidence such as certified LCA and employer-provided letters.
+                - Required forms:
+                     - Form DS-160, Online Nonimmigrant Visa Application
+                - Supporting documents:
+                    - Passport (valid for at least six months beyond the intended stay)
+                    - Photo meeting DS-160 requirements
+                    - Travel Itinerary
+                    - Resume/CV
+                    - DS-160 Confirmation Page
+
 
                 **Step 2**: Use the following structure for the letter:
                 ```
-                #Employer Support Letter for H-1B Visa Application – [Beneficiary’s Full Name]
-                **[Employer’s Name]**  
-                **[Employer’s Address]**  
-                **[City, State, ZIP Code]**  
+                ## Interview Cheat‑Sheet
 
-                **Date:** _YYYY-MM-DD_  
+                ### Applicant Identity & Contact Details  
+                **Full Name:** [Applicant’s Full Name]  
+                **Date of Birth:** [MM/DD/YYYY]  
+                **Passport Number:** [Passport Number]  
 
-                **Subject:** Employer Support Letter for H-1B Visa Application – [Beneficiary’s Full Name]  
+                The consular officer will first verify your identity and contact information exactly as they appear on your DS‑160 form. Be prepared to state your full name, date of birth, and passport number clearly. Speak confidently and ensure you match the exact spelling and format on official documents. If your DS‑160 included any alias or previous name variations, be ready to explain briefly why you used them and confirm current legal name usage.
 
-                **Dear USCIS Officer,**  
+                ### Purpose of Trip & Planned Travel Dates  
+                **Visa Category:** [e.g., B‑2 Tourist, F‑1 Student]  
+                **Purpose of Visit:** [Purpose (from DS‑160)]  
+                **Planned Dates of Travel:** [Arrival date] to [Departure date]  
 
-                **Introduction**  
-                **Parties & Purpose:** “[Employer’s Name] (the “Petitioner”) respectfully submits this Employer Support Letter on behalf of **[Beneficiary’s Name]** (the “Beneficiary”) in support of its H-1B petition.”  
-                **Position Summary:** Title: _[Position Title]_; SOC Code: _[Code]_; Location(s): _[City, State]_.  
-                **Statutory Framework:** Requested classification under INA § 214(i) for specialty occupations.  
+                This section captures your stated reason for visiting the U.S. and the timeframe you expect to stay. Explain why your trip is necessary and appropriate under the specific visa category—noting, for example, tourism, business meetings, academic study, or exchange programs. If dates are approximate, clarify the rationale, such as academic term start or business schedule. Be prepared to justify why you chose that period and how it aligns with your purpose without intention of immigrant intent.
 
-                **Job Details**  
-                **Duties & Responsibilities:**  
-                    **Primary Duties:**  
-                    1. _[Describe specialized analytical/design/programming duty requiring theoretical knowledge]_  
-                    2. _[Describe project leadership or cross-functional coordination tasks]_  
-                    **Secondary Duties:**  
-                     _[List supportive tasks that nonetheless require degree-level skills]_  
-                **Specialty Occupation Justification:**  
-                    Demonstrates application of specialized knowledge in _[field]_ consistent with SOC Code _[Code]_ description.  
-                    Duties require at least a bachelor’s degree in _[Field]_ (e.g., complex data modeling, software architecture).  
+                ### U.S. Contact & Accommodation  
+                **U.S. Point of Contact or Hosting Address:** [Name / Organization / Address]  
+                **Accommodation Plan:** [Where you will stay]  
 
-                **Degree Relevance**  
-                **Beneficiary’s Academic Credentials:**  
-                    _[Degree Type] in [Field]_ from _[University]_ (Date).  
-                    Honors, thesis title, accreditation status.  
-                **Direct Correlation to Duties:**  
-                    Coursework in _[Key Subjects]_ equips Beneficiary to perform _[Duty #1]_.  
-                    Specialized training in _[Tool/Method]_ essential for _[Duty #2]_.  
-                **Policy Alignment:**  
-                    Cite AAO decision or policy memo (e.g., “Matter of Michael Hertz Associates”) confirming degree-to-duty nexus.  
+                If your DS‑160 provided a U.S. point of contact or address where you will reside, summarize that information. Explain the nature of your relationship with the point of contact or how you arranged your accommodation (hotel, family, host organization). Be ready to articulate why staying there is appropriate for the trip and how it supports the legitimacy of your travel purpose. Avoid speculation—state only what’s filled in your application and ensure consistency.
 
-                **Salary and Need**  
-                **Offered Salary:**  
-                    Annual wage: _$[Amount]_ (at or above prevailing wage level _[Level]_ as per LCA certified _[Date]_).  
-                    Overtime/bonus structure (if applicable).  
-                **Business Justification:**  
-                    Role critical for _[project/client name]_, directly impacting revenue of _$[Amount]_ per quarter.  
-                    Lack of qualified U.S. applicants necessitates hiring the Beneficiary to meet specialized technical/manufacturing/service demands.  
-                **Labor Condition Application (LCA) Compliance:**  
-                    LCA certified by DOL on _[Date]_; public access file maintained per 20 C.F.R. § 655.760.  
+                ### Employment or Study Details  
+                **Current Occupation or Institution:** [Employer or School Name]  
+                **Job Title or Course of Study:** [Your position or program]  
+                **Duration in Role or Program:** [Start Date – Present]  
 
-                **Conclusion & Request**  
-                **Eligibility Confirmation:** “Beneficiary’s specialized degree and experience clearly satisfy the requirements of a specialty occupation under INA § 214(i).”  
-                **Request for Approval:** “Petitioner respectfully requests that USCIS approve the H-1B petition for **[Beneficiary’s Name]** at its earliest convenience.”  
-                **Point of Contact:** “For any questions or additional information, please contact **[Employer’s Representative Name]**, **[Title]**, at **[Phone Number]** or **[Email Address]**.”  
+                When asked, describe your current professional or academic status as provided in your DS‑160 form. Clarify your role, duties, or field of study and how long you’ve held that role or been enrolled. If applying under a student or exchange category, be sure to reference your SEVIS‑ID and educational institution details. For work or business‑based applications, explain how your trip’s activities relate to your current position or employer responsibilities.
 
-                **Sincerely,**  
-                \_\_\_\_\_\_\_\_\_\_\_, 
-                **[Employer’s Representative Name], [Title]**  
-                **[Company Name]**  
+                ### Travel History & Prior U.S. Visits  
+                **Previous U.S. Visits (last 5 years):** [List dates & purpose]  
+                **International Travel History:** [Other countries visited]  
 
-                **cc:** [Attorney’s Name (if applicable)], [Beneficiary], [HR File]  
+                You will be asked about your recent travel history—especially to the U.S.—as entered in the DS‑160. Provide details of any past visits, including dates and legitimate reasons (tourism, work, study). If your DS‑160 recorded other international travel, be prepared to describe those trips and demonstrate credible reasons for repeated travel abroad. This shows consistency and helps eliminate concerns of immigration intent. Only speak to what’s filled in your application.
 
+                ### Social Media & Online Presence  
+                **Social Media Accounts (active within last 5 years):** [Handles or Links]  
+
+                Modern DS‑160 versions require listing social media usernames active over the past five years. Expect to discuss these accounts if listed—why you used them and how you maintain transparency. Be ready to confirm that you included all accounts and that your online presence corresponds with the identity and background given in the DS‑160. Honesty is critical, and the consular official may check consistency between accounts and your stated personal history.
+
+                ### Funding & Financial Ties  
+                **Source of Funds for Trip:** [Personal savings / Sponsor]  
+                **Employment Income or Funding Source:** [Details]  
+                **Ties to Home Country:** [Assets, family, employment]  
+
+                You may be prompted to explain how you will finance the trip and why you will return. Describe your financial means—such as salary, savings, institutional sponsorship, or family support—as indicated in your DS‑160 responses. Also emphasize ties that strongly root you in your home country, such as stable employment, family obligations, or property ownership. This underscores your intent to depart the U.S. at the end of the authorized stay.
+
+                ### Supporting Document Prep  
+                **Documents to Present:** DS‑160 confirmation page, passport, photo, receipt, supporting evidence as indicated.  
+
+                Be ready to show your DS‑160 confirmation barcode page at the interview, along with passport, the photo upload and visa fee receipt. Gather any additional documents you listed in your DS‑160, such as itinerary, employment letters, invitation letters, educational certificates, or any other support. Organize them logically so you can refer quickly if asked. Your preparation will reflect attention to detail and reinforce credibility with the officer.
+
+              
                 ```
-
-                Step 3.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
-                Step 4.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
-                Step 5.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
-                Step 6.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file .
-                Step 7. Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
+                step 3.While selecting data to fill in the placeholders, use only accurate and relevant information from the provided input file or files. If the required information is not available, leave the placeholder blank. Do not attempt to fill placeholders with incorrect or unrelated data.
+                Step 4.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
+                Step 5.In the "Supporting Evidence & Exhibits" section, list only the exhibits for which supporting documents are actually provided in the input. Do not list exhibits that are missing or not provided. Do not include any placeholders or blank entries for missing exhibits. 
+                Step 6.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
+                Step 7.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
+                Step 8.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
+                Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
                 """
             ),
             model="gpt-4.1",
@@ -190,93 +250,7 @@ async def initialize_agents(vector_store_id):
             tools=[
                 WebSearchTool(),
                 FileSearchTool(
-                    max_num_results=5,
-                    vector_store_ids=[vector_store_id],
-                ),
-            ],
-        ),
-        "LCA Memorandum": Agent(
-            name="LCA Memorandum Agent",
-            instructions=(
-                f"""
-                Today’s date is {current_date}.
-                You are tasked with generating an LCA memorandum for an H-1B visa application.
-
-                **Step 1**: Extract all necessary information from the vector store, including:
-                - Certified LCA.
-                - Prevailing wage documentation.
-                - Public-access files.
-
-                **Step 2**: Use the following structure for the memorandum:
-                ```
-                #Labor Condition Application (LCA) Memorandum for H-1B Visa Application – [Beneficiary’s Full Name]
-                **[Employer’s Name]**  
-                **[Employer’s Address]**  
-                **[City, State, ZIP Code]**  
-
-                **Date:** _YYYY-MM-DD_  
-
-                **Subject:** LCA Memorandum for H-1B Visa Application – [Beneficiary’s Full Name]  
-
-                **Dear USCIS Officer,**  
-
-                **Introduction**  
-                **Parties & Purpose:** “[Employer’s Name] (the “Petitioner”) submits this Labor Condition Application (LCA) Memorandum in support of its H-1B petition for **[Beneficiary’s Name]** (the “Beneficiary”).”  
-                **Statutory Authority:** LCA filed under INA § 212(n) and 20 C.F.R. Part 655, Subpart H, to ensure compliance with prevailing wage and public disclosure requirements.  
-                **Position Summary:** Title: _[Position Title]_; SOC Code: _[Code]_; Worksite: _[City, State]_.  
-
-                **Prevailing Wage Determination**  
-                 **Wage Source & Level:**  
-                     Prevailing wage obtained from the Department of Labor’s Online Wage Library or independent wage survey (e.g., Bureau of Labor Statistics OES data) for SOC Code _[Code]_ in _[Metropolitan Area]_.  
-                     Selected Wage Level: _[Level]_ (per 20 C.F.R. § 655.731).  
-                 **Calculation Methodology:**  
-                     Cross‐referenced DOL’s Occupational Employment Statistics with proprietary survey data to confirm median wage.  
-                     Adjusted for geographic differential using BLS locality pay percentages.  
-                 **Supporting Documents:**  
-                     **Exhibit A:** DOL Prevailing Wage Determination notice (PWD Case No. _[Number]_) dated _[Date]_.  
-                     **Exhibit B:** Copy of proprietary wage survey report (with methodology summary).  
-                     **Exhibit C:** LCA certified by the Department of Labor on _[Date]_ (Case No. _[Number]_).  
-
-                **Public-Disclosure Compliance**  
-                  **Posting Requirements:**  
-                     Posted LCA notice at the worksite and alternative worksites for 10 consecutive business days as required by 20 C.F.R. § 655.734.  
-                     Notices included job title, SOC code, wage rate, and contact information for the Employer’s Representative.  
-                **Internal Notice:**  
-                    Provided notice to bargaining representative (if any) or, in absence thereof, posted notice where other employees in similar occupations are employed.  
-                **Public Access File:**  
-                    Maintained at the worksite, available for public inspection, containing:  
-                    1. Certified LCA and supporting PWD.  
-                    2. Documentation of wage postings and internal notices.  
-                    3. Beneficiary’s wage rate and period of employment.  
-                    4. Evidence of business necessity for alternate worksites (if applicable).  
-                    **Exhibit D:** Index to Public Access File contents with dates and locations of postings.  
-
-                **Conclusion & Certification**  
-                **Compliance Statement:** “Petitioner confirms full compliance with all LCA requirements under INA § 212(n) and 20 C.F.R. Part 655, Subpart H, including accurate prevailing wage determination and public disclosure.”  
-                **Record Retention:** Employer will retain the Public Access File for at least one year beyond the period of employment as required by 20 C.F.R. § 655.760.  
-                **Point of Contact:** “For any questions or review of the Public Access File, please contact **[Employer’s Representative Name]**, **[Title]**, at **[Phone Number]** or **[Email Address]**.”  
-
-                **Sincerely,**  
-                \_\_\_\_\_\_\_\_\_\_\_, 
-                **[Employer’s Representative Name], [Title]**  
-                **[Company Name]**  
-
-                **cc:** [Attorney’s Name (if applicable)], [HR Compliance File], [Public Access File Index]  
-                ```
-
-                Step 3.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
-                Step 4.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
-                Step 5.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
-                Step 6.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file .
-                Step 7. Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
-                """
-            ),
-            model="gpt-4.1",
-            model_settings=ModelSettings(temperature=0.9),
-            tools=[
-                WebSearchTool(),
-                FileSearchTool(
-                    max_num_results=5,
+                    max_num_results=50,
                     vector_store_ids=[vector_store_id],
                 ),
             ],
@@ -286,82 +260,86 @@ async def initialize_agents(vector_store_id):
             instructions=(
                 f"""
                 Today’s date is {current_date}.
-                You are tasked with generating a response brief to rebut USCIS concerns regarding specialty occupation or degree equivalency.
+                You are tasked with generating a RFE Response for DS-160 (Nonimmigrant Visas) application.
 
-                **Step 1**: Extract all necessary information from the vector store, including:
-                - RFE details.
-                - Personal information of the beneficiary.
-                - Supporting evidence such as RFE notices, evidence of degree, employer letters, and certified LCA.
+                **Step 1**: Extract all necessary information only from the file provided. Do not use information from previous files or external sources. If any required information is missing, leave the corresponding placeholder blank; do not attempt to fill it with assumptions or unrelated data. This includes:
+                - Personal details of the beneficiary or the client.
+                - Employer details.
+                - Job description and duties.
+                - Required forms:
+                     - Form DS-160, Online Nonimmigrant Visa Application
+                - Supporting documents:
+                    - Passport (valid for at least six months beyond the intended stay)
+                    - Photo meeting DS-160 requirements
+                    - Travel Itinerary
+                    - Resume/CV
+                    - DS-160 Confirmation Page
 
-                **Step 2**: Use the following structure for the response brief:
+
+                **Step 2**: Use the following structure for the letter:
                 ```
-                #Response to USCIS RFE – H-1B Petition for [Beneficiary’s Full Name]
-                **[Employer’s Name]**  
-                **[Employer’s Address]**  
-                **[City, State, ZIP Code]**  
+                # Response to Consular RFE – DS-160 Application for [Applicant’s Full Name]  
+                **[Applicant’s Name or Representative's Name]**  
+                **[Applicant’s Address or Attorney’s Office]**  
+                **[City, State, ZIP Code]**
 
-                **Date:** _YYYY-MM-DD_  
+                **Date:** _YYYY-MM-DD_
 
-                **Subject:** Response to Request for Evidence (RFE) – [Beneficiary’s Full Name]  
+                **Subject:** Response to Request for Evidence (RFE) – DS-160 Nonimmigrant Visa Application for [Applicant’s Full Name]
 
-                **Dear USCIS Officer,**  
+                **Dear Consular Officer,**
 
                 **Introduction & RFE Reference**  
-                **Parties & Purpose:** “[Employer’s Name] (the “Petitioner”) submits this Response to the Request for Evidence (RFE) issued in connection with its H-1B petition for **[Beneficiary’s Name]** (the “Beneficiary”).”  
-                 **RFE Details:**  
-                    Receipt Number: _[Number]_  
-                    RFE Issued: _[Date]_  
-                    Response Deadline: _[Date]_  
-                 **Summary of USCIS Concerns:**  
-                    1. Question as to whether the position qualifies as a specialty occupation.  
-                    2. Sufficiency of evidence regarding Beneficiary’s degree and experience.  
-                    3. Adequacy of the job duties description.  
+                **Parties & Purpose:** “[Applicant’s Name] (the “Applicant”) respectfully submits this Response to the Request for Evidence (RFE) issued in connection with the DS-160 Nonimmigrant Visa application.”  
+                **RFE Details:**  
+                Case Number: _[Number]_  
+                RFE Issued: _[Date]_  
+                Response Deadline: _[Date]_  
+                **Summary of Consular Concerns:**  
+                1. Discrepancy or lack of clarity in answers provided on DS-160 form.  
+                2. Incomplete supporting documentation regarding identity and travel plans.  
+                3. Request for further clarification on applicant’s intent and ties to home country.
 
-                **Rebuttal to USCIS Concerns**  
-                 **Concern 1: Specialty Occupation Qualification**  
-                    **USCIS Position:** “Position duties appear routine and not requiring a bachelor’s degree in a specific specialty.”  
-                    **Rebuttal:**  
-                    Detailed breakdown of primary duties demonstrating theoretical and practical application of a specialized field (see Section 2.1).  
-                    Citation of SOC Code _[Code]_ description and AAO precedent (e.g., *Matter of Michael Hertz Associates*).  
-                 **Concern 2: Beneficiary’s Credentials**  
-                    **USCIS Position:** “Insufficient evidence that Beneficiary holds a degree in the required specialty.”  
-                    **Rebuttal:**  
-                    Submitted certified copy of diploma and official transcript (Ex. A).  
-                    Credential evaluation report confirming U.S. equivalency to a bachelor’s degree in _[Field]_ (Ex. B).  
-                 **Concern 3: Job Duties Description**  
-                    **USCIS Position:** “Job description lacks specificity regarding specialized tasks.”  
-                    **Rebuttal:**  
-                    Revised job description with granular tasks tied to degree-level knowledge (Ex. C).  
-                    Organizational chart illustrating Beneficiary’s role and reporting relationships (Ex. D).  
-                 **Additional Legal Authority:**  
-                    Cite INA § 214(i) and 8 C.F.R. § 214.2(h)(4)(iii)(A) regarding specialty occupation definitions.  
+                **Rebuttal to Consular Concerns**  
+                **Concern 1: DS-160 Content Accuracy**  
+                **Consular Position:** “Inconsistencies or vague responses in DS-160 responses.”  
+                **Rebuttal:**  
+                The updated DS-160 form (Ex. A) corrects and clarifies previous responses. A summary sheet outlining key changes and reasons for edits has also been included (Ex. B). The applicant affirms under oath that all details now accurately reflect their circumstances and travel intent.  
 
-                **Supporting Evidence & Exhibits**  
-                 **Exhibit A:** Beneficiary’s diploma and official transcript (with certified translation).  
-                 **Exhibit B:** Credential evaluation report by [Evaluator Name], dated _[Date]_.  
-                 **Exhibit C:** Augmented job description, including task-level breakdown.  
-                 **Exhibit D:** Organizational chart showing Beneficiary’s position within the team.  
-                 **Exhibit E:** Prior H-1B approval notices (if applicable), with receipt numbers.  
-                 **Exhibit F:** Letters of support from project managers detailing specialized duties performed.  
+                **Concern 2: Supporting Documentation Deficiency**  
+                **Consular Position:** “Insufficient documentation provided to verify identity or purpose of travel.”  
+                **Rebuttal:**  
+                Applicant has now submitted all required materials, including a valid passport (Ex. C), compliant photo (Ex. D), travel itinerary (Ex. E), and DS-160 confirmation page (Ex. F). Where applicable, the resume/CV (Ex. G) and any relevant employment or invitation letters have also been enclosed.  
+
+                **Concern 3: Nonimmigrant Intent Clarification**  
+                **Consular Position:** “Need for further evidence of applicant’s intent to return to home country.”  
+                **Rebuttal:**  
+                Applicant has provided evidence of strong ties to the home country, including family connections, property records, or ongoing educational/professional commitments (Ex. H). These demonstrate a clear intent to return after the temporary visit as stated in the application.
+
+                **Additional Legal Authority:**  
+                In accordance with the U.S. Department of State’s regulations regarding nonimmigrant visa issuance, the applicant respectfully affirms full compliance with all DS-160 requirements and guidelines as outlined at Travel.gov.
 
                 **Conclusion & Request**  
-                 **Eligibility Reaffirmed:** “Based on the expanded evidence and legal authorities cited, the Beneficiary clearly meets all requirements for classification in a specialty occupation under INA § 214(i).”  
-                 **Request for Adjudication:** “Petitioner respectfully requests that USCIS approve the H-1B petition for **[Beneficiary’s Name]** promptly and notify the Petitioner by email at **[Email Address]**.”  
-                 **Point of Contact:** “For any further questions or documentation requests, please contact **[Employer’s Representative Name]**, **[Title]**, at **[Phone Number]** or **[Email Address]**.”  
+                **Eligibility Reaffirmed:** “Based on the revised application materials and supporting documents, the Applicant has fully addressed the consular concerns and remains eligible for issuance of a nonimmigrant visa.”  
+                **Request for Adjudication:** “Applicant respectfully requests that the consular officer proceed with adjudication and notify the Applicant at **[Email Address]** of the visa decision or next steps.”  
+                **Point of Contact:** “For further questions or submission of additional documents, please contact **[Attorney or Applicant’s Representative Name]**, **[Title, if applicable]**, at **[Phone Number]** or **[Email Address]**.”
 
-                **Sincerely,**  
+                **Very truly yours,**  
                 \_\_\_\_\_\_\_\_\_\_\_,  
-                **[Employer’s Representative Name], [Title]**  
-                **[Company Name]**  
+                **[Representative’s Name], [Title if applicable]**  
+                **[Organization Name or Applicant]**
+ 
 
-                **cc:** [Attorney’s Name (if applicable)], [Beneficiary], [Immigration File]
                 ```
 
-                Step 3.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
-                Step 4.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
-                Step 5.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
-                Step 6.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
-                Step 7. Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
+                step 3.While selecting data to fill in the placeholders, use only accurate and relevant information from the provided input file or files. If the required information is not available, leave the placeholder blank. Do not attempt to fill placeholders with incorrect or unrelated data.
+                Step 4.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
+                Step 5.In the "Supporting Evidence & Exhibits" section, list only the exhibits for which supporting documents are actually provided in the input. Do not list exhibits that are missing or not provided. Do not include any placeholders or blank entries for missing exhibits. 
+                Step 6.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
+                Step 7.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
+                Step 8.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
+                Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
+
                 """
             ),
             model="gpt-4.1",
@@ -369,444 +347,7 @@ async def initialize_agents(vector_store_id):
             tools=[
                 WebSearchTool(),
                 FileSearchTool(
-                    max_num_results=5,
-                    vector_store_ids=[vector_store_id],
-                ),
-            ],
-        ),
-        "Data-Collection Supplement Attachments": Agent(
-            name="Data Collection Supplement Agent",
-            instructions=(
-                f"""
-                Today’s date is {current_date}.
-                You are tasked with generating a data-collection supplement for cases filed under cap-exempt or fee-exemption categories.
-
-                **Step 1**: Extract all necessary information from the vector store, including:
-                - Exemption details.
-                - Supporting evidence such as the H-Classification Supplement, certified LCA, and exemption documents.
-
-                **Step 2**: Use the following structure for the supplement:
-                ```
-                #H-1B Data Collection and Filing Fee Exemption Supplement – [Beneficiary’s Full Name]
-                **[Employer’s Name]**  
-                **[Employer’s Address]**  
-                **[City, State, ZIP Code]**  
-
-                **Date:** _YYYY-MM-DD_  
-
-                **Subject:** Data Collection Supplement for H-1B Visa Application – [Beneficiary’s Full Name]  
-
-                **Dear USCIS Officer,**  
-
-                **Introduction**  
-                - **Parties & Purpose:** “[Employer’s Name] (the “Petitioner”) submits this Data Collection Supplement in support of its H-1B petition for **[Beneficiary’s Name]** (the “Beneficiary”).”  
-                - **Statutory Basis:** This supplement is provided pursuant to USCIS policy guidance on H-1B Data Collection and Filing Fee Exemptions (8 C.F.R. § 214.2(h)(19)).  
-                - **Position Information:** Title: _[Position Title]_; SOC Code: _[Code]_; Worksite: _[City, State]_.  
-
-                **Exemption Details**  
-                 **Exemption Category:**  
-                    ☐ Cap-exempt institution under INA § 214(g)(5)(C) (e.g., institution of higher education)  
-                    ☐ Nonprofit affiliated with an institution of higher education under INA § 214(g)(5)(A)  
-                    ☐ Government research organization under INA § 214(g)(5)(B)  
-                    ☐ Fee-exempt nonprofit research organization under 8 C.F.R. § 214.2(h)(19)  
-                **Justification for Exemption:**  
-                    Describe organizational status (e.g., “Nonprofit research entity registered under Section 501(c)(3) of the Internal Revenue Code”).  
-                    Explain affiliation or control relationship (e.g., memorandum of understanding with University X).  
-                    Provide rationale: research focus, public benefit, no commercial gain.  
-                **Regulatory Compliance:**  
-                    Cite relevant USCIS policy memoranda (e.g., “Fee Exemption for Nonprofit Research Organizations,” HQ 70/6.5.2†).  
-                    Confirm that placement of Beneficiary does not generate net profit for Petitioner.  
-
-                **Supporting Evidence & Exhibits**  
-                  **Exhibit A:** IRS determination letter evidencing 501(c)(3) status (Date: _[Date]_).  
-                  **Exhibit B:** Articles of incorporation and bylaws showing nonprofit mission and governance.  
-                  **Exhibit C:** Affiliation agreement or control documentation with institution of higher education (if applicable).  
-                  **Exhibit D:** Organizational chart highlighting research units and Beneficiary’s position.  
-                  **Exhibit E:** Form ETA-9035 data collection supplement completed and signed by Petitioner.  
-                  **Exhibit F:** Job description emphasizing duties in furtherance of nonprofit research or education.  
-
-                **Conclusion & Certification**  
-                  **Compliance Statement:** “Petitioner certifies that all information provided is true and correct, and that the Beneficiary’s employment falls squarely within the claimed exemption category.”  
-                  **Record Retention:** “All supporting documentation will be maintained in the Public Access File as required by 20 C.F.R. § 655.760.”  
-                  **Request for Consideration:** “Petitioner respectfully requests that USCIS recognize the exemption and adjudicate the H-1B petition without cap or fee restrictions.”  
-                  **Point of Contact:** “For any further inquiries or to review additional documentation, please contact **[Employer’s Representative Name]**, **[Title]**, at **[Phone Number]** or **[Email Address]**.”  
-
-                **Sincerely,**  
-                \_\_\_\_\_\_\_\_\_\_\_,
-                **[Employer’s Representative Name], [Title]**  
-                **[Company Name]**  
-
-                **cc:** [Attorney’s Name (if applicable)], [Beneficiary], [HR Compliance File]  
-
-                ```
-
-                Step 3.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
-                Step 4.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
-                Step 5.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
-                Step 6.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file .
-                Step 7. Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
-                """
-            ),
-            model="gpt-4.1",
-            model_settings=ModelSettings(temperature=0.9),
-            tools=[
-                WebSearchTool(),
-                FileSearchTool(
-                    max_num_results=5,
-                    vector_store_ids=[vector_store_id],
-                ),
-            ],
-        ),
-        "Demand Letter": Agent(
-            name="Demand Letter Agent",
-            instructions=(
-                        f"""
-                        Today’s date is {current_date}.  
-                        You are an expert immigration attorney tasked with generating a formal demand letter to U.S. Citizenship and Immigration Services (USCIS) under the Mandamus Act, compelling them to adjudicate a pending H-1B petition.    
-                        Step 1. Extract from the vector store all client & attorney details, employer justifications, certified LCA, prevailing-wage docs, RFE responses, and supporting evidence.  
-                        Step 2. Use this exact structure (from GPT-Demand-1.docx) and format it in Markdown:
-    
-                        ```
-                        #Demand for Adjudication Under the Mandamus Act and Administrative Procedure Act – [Beneficiary’s Full Name] 
-                        **[Attorney’s Name]**  
-                        **[Law Firm Name]**  
-                        **[Street Address]**  
-                        **[City, State, ZIP Code]**  
-                        **[Phone Number]**  
-                        **[Email Address]**  
-
-                        **Date:** _YYYY-MM-DD_  
-
-                        **Employer Contact:**  
-                        - **Name:** _[Employer’s Name]_  
-                        - **Title:** _[Title]_  
-                        - **Company:** _[Company Name]_  
-                        - **Address:** _[Street Address], City, State, ZIP Code_  
-
-                        **RE:** _Demand for Adjudication under the Mandamus Act – [Beneficiary’s Full Name]_  
-
-                        ### Dear [Employer’s Name],  
-
-                        **Introduction & Jurisdiction**  
-                        - **Parties:** “This letter is submitted by **[Law Firm Name]** on behalf of **[Employer Name]** (the “Petitioner”) in support of its H-1B petition for **[Beneficiary Name]** (the “Beneficiary”).”  
-                        - **Procedural History:**  
-                          - I-129 Filed: _[Date]_; Receipt No.: _[Number]_  
-                          - RFE Issued: _[Date]_ → Response Filed: _[Date]_  
-                          - Current Delay: _[Number]_ days beyond USCIS’s 60-day guideline  
-                        - **Jurisdiction:** Demand is made under *28 U.S.C. § 1361* (mandamus) and *5 U.S.C. § 555(b)* (unreasonable delay).  
-
-                        **Factual Background**  
-                        - **Employer Profile:** Industry, size, nature of business, and critical need for Beneficiary’s skills.  
-                        - **Beneficiary Credentials:** Degree, field, years of experience, prior visa status.  
-                        - **Position Details:** Title, SOC code, wage level, project description, worksite location(s).  
-                        - **Key Dates (Timeline):**  
-                          - • _[Date]_ – I-129 Filed  
-                          - • _[Date]_ – RFE Issued (Ex. B)  
-                          - • _[Date]_ – RFE Response Filed (Ex. C)  
-                          - • _Today’s Date_ – Over _[X]_ days past target  
-
-                        **Legal Standard for Mandamus**  
-                        - **Clear Right:** Petitioner’s indisputable right to a decision.  
-                        - **Non-Discretionary Duty:** USCIS must adjudicate within reasonable time.  
-                        - **No Adequate Alternative:** Status inquiry or service request is insufficient.  
-                        - **Agency Guidelines:** USCIS aims to resolve RFEs within 60 days (see July 17, 2017 Policy Memo).  
-
-                        **Demand for Relief**  
-                        - **Relief Sought:** Adjudication of the H-1B petition within **14 days** of receipt.  
-                        - **Statutory Authority:** *28 U.S.C. § 1361*; *5 U.S.C. § 555(b)*.  
-                        - **Consequences if Unresolved:**  
-                          - **Employer Hardship:** Project delays, breach of contract, revenue loss (≈ $X/week).  
-                          - **Beneficiary Hardship:** Loss of work authorization on _[Date]_, family disruption.  
-
-                        **Prejudice & Hardship**  
-                        - **Employer Impact:**  
-                          - Financial loss: ~$[Amount] per week of delay.  
-                          - Operational setbacks: missed deadlines, client penalties.  
-                        - **Beneficiary Impact:**  
-                          - Authorized stay expires on _[Date]_; risk of unlawful presence.  
-                          - Dependents’ schooling and stability jeopardized.  
-                        - **Irreparable Injury:** Monetary damages inadequate; only mandamus will remedy.  
-
-                        **Exhibits & Supporting Documents**  
-                        - **Ex. A:** Redacted I-129 petition package  
-                        - **Ex. B:** USCIS receipt notices  
-                        - **Ex. C:** RFE and response correspondence  
-                        - **Ex. D:** Beneficiary’s CV, degree certificates  
-                        - **Ex. E:** Client contract summary / org chart  
-
-                        **Conclusion & Next Steps**  
-                        - **Final Demand:** “We request USCIS issue a final decision no later than 14 days from service.”  
-                        - **Service Confirmation:** “Please confirm receipt via email to **[Attorney’s Email]** or fax to **[Fax Number]**.”  
-                        - **Litigation Warning:** “Absent timely action, we will file a Writ of Mandamus in the U.S. District Court for the District of **[District]**, and seek EAJA fees and costs.”  
-                        - **Attorney Availability:** “[Attorney Name] is available to provide any further information USCIS may require.”  
-
-                        **Sincerely,** 
-                        \_\_\_\_\_\_\_\_\_\_\_,
-                        **[Attorney’s Full Name], Esq.**  
-                        **[Law Firm Name]**  
-
-                        **cc:** [Employer HR / In-House Counsel], [Other Relevant Parties] 
-
-                        ```
-                        Step 3.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
-                        Step 4.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
-                        Step 5.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
-                        Step 6.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file .
-                        Step 7. Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
-                        """
-
-            ),
-            model="gpt-4.1",
-            model_settings=ModelSettings(temperature=0.9),
-            tools=[
-                WebSearchTool(),
-                FileSearchTool(
-                    max_num_results=5,
-                    vector_store_ids=[vector_store_id],
-                ),
-            ],
-        ),
-        "Assessment Report": Agent(
-            name="Assessment Report Agent",
-            instructions=(
-                f"""
-                Today’s date is {current_date}.
-                You are tasked with generating an assessment report summarizing the applicant's qualifications and eligibility for an H-1B visa.
-
-                **Step 1**: Extract all necessary information from the vector store, including:
-                - Personal details of the beneficiary.
-                - Employer details.
-                - Supporting evidence such as evidence of degree, certified LCA, and passport/I-94 copies.
-
-                **Step 2**: Use the following structure for the report:
-                ```
-                #H-1B Specialty Occupation Support Letter – Electrical Engineer Position for [Beneficiary’s Full Name]
-                **[Employer’s Name]**  
-                **[Employer’s Address]**  
-                **[City, State, ZIP Code]**  
-
-                **Date:** _YYYY-MM-DD_  
-
-                **Subject:** Assessment Report for H-1B Visa Application – [Beneficiary’s Full Name]  
-
-                **Dear USCIS Officer,**  
-
-                **Introduction**  
-                **Parties:** “[Employer’s Name] (the “Petitioner”) submits this Assessment Report in support of its H-1B petition for **[Beneficiary’s Name]** (the “Beneficiary”).”  
-                **Purpose:** To provide a comprehensive evaluation of the Beneficiary’s credentials and demonstrate statutory eligibility under INA § 214(i).  
-                **Position Overview:** Title: _[Position Title]_; SOC Code: _[Code]_; Wage Level: _[Level]_; Location(s): _[City, State]_.
-
-                **Employer & Position Description**  
-                **Employer Profile:**  
-                Industry, size, years in operation.  
-                Core business activities and key clients.  
-                Why specialized expertise of the Beneficiary is essential to operations/projects.  
-                **Job Duties & Requirements:**  
-                Detailed list of primary and ancillary duties.  
-                Minimum education and experience prerequisites.  
-                Specialized tools, methodologies, software, or processes required.
-
-                **Summary of Qualifications**  
-                **Educational Background:**  
-                    Degree(s) earned (e.g., B.S., M.S., Ph.D.) in _[Field]_ from _[Institution]_ (Date).  
-                    Honors, thesis title, accredited status of institution.  
-                **Professional Experience:**  
-                    _[Years]_ years at _[Company]_ as _[Role]_; key achievements and project summaries.  
-                    Prior H-1B or other visa status (if applicable) with USCIS receipt numbers and approval dates.  
-                **Specialized Knowledge & Skills:**  
-                    Technical proficiencies (software, programming languages, analytical techniques).  
-                    Certifications, published papers, patents, or speaking engagements.  
-                    Unique contributions to past or ongoing projects demonstrating non-routine expertise.
-
-                **Alignment with Regulatory Criteria**  
-                **“Specialty Occupation” Analysis (INA § 214(i)):**  
-                    Explain how the position requires a bachelor’s (or higher) degree in a specific specialty.  
-                    Compare job duties to standard SOC descriptions and educational prerequisites.  
-                **“Beneficiary’s Qualifications” Analysis:**  
-                    Connect each degree and experience bullet to a corresponding duty or requirement.  
-                    Cite USCIS policy memoranda or AAO decisions where similar profiles were approved.
-
-                **Supporting Evidence & Exhibits**  
-                **Exhibit A:** Copy of Beneficiary’s diploma(s) and transcripts (with English translations).  
-                **Exhibit B:** Detailed resume/CV, employment verification letters, and reference contacts.  
-                **Exhibit C:** Job offer letter, detailed job description, and organizational chart.  
-                **Exhibit D:** Professional certifications, patents, publications, or awards.  
-                **Exhibit E:** Comparative wage data (Prevailing Wage Determination or LCA).
-
-                **Legal & Procedural Compliance**  
-                **Labor Condition Application (LCA):** LCA certified on _[Date]_; wage level and worksite locations match.  
-                **Public Access File:** Confirm availability of required documentation at worksite.  
-                **Dependents & Maintenance of Status:** Brief note on any accompanying H-4 or E-dependent filings.
-
-                **Conclusion & Request**  
-                **Eligibility Reaffirmed:** “Based on the foregoing, the Beneficiary clearly meets the educational and experiential requirements for the specialty occupation.”  
-                **Favorable Adjudication Sought:** “Petitioner respectfully requests that USCIS approve the H-1B petition for **[Beneficiary’s Name]** promptly, in accordance with INA § 214(i).”  
-                **Point of Contact:** “Please direct any questions or requests for additional information to **[Employer’s Representative Name]**, **[Title]**, at **[Phone Number]** or **[Email Address]**.”  
-
-                **Sincerely,**
-                \_\_\_\_\_\_\_\_\_\_\_,
-                **[Employer’s Representative Name], [Title]**  
-                **[Company Name]**  
-
-                **cc:** [Attorney’s Name, if applicable], [Beneficiary], [HR File] 
-                ```
-
-                Step 3.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
-                Step 4.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
-                Step 5.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
-                Step 6.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file .
-                Step 7. Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
-                """
-            ),
-            model="gpt-4.1",
-            model_settings=ModelSettings(temperature=0.9),
-            tools=[
-                WebSearchTool(),
-                FileSearchTool(
-                    max_num_results=5,
-                    vector_store_ids=[vector_store_id],
-                ),
-            ],
-        ),
-        "Eligibility Assessment Report": Agent(
-            name="Eligibility Assessment Report Agent",
-            instructions=(
-                f"""
-                Today’s date is {current_date}.
-                You are tasked with generating an eligibility assessment report evaluating the applicant's qualifications against H-1B visa requirements.
-
-                **Step 1**: Extract all necessary information from the vector store, including:
-                - Personal details of the beneficiary.
-                - Employer details.
-                - Supporting evidence such as Form I-129, evidence of degree, and employer letters.
-
-                **Step 2**: Use the following structure for the report:
-                ```
-                #H-1B Specialty Occupation Support Letter – [Beneficiary’s Full Name]
-                **[Employer’s Name]**  
-                **[Employer’s Address]**  
-                **[City, State, ZIP Code]**  
-
-                **Date:** _YYYY-MM-DD_  
-
-                **Subject:** Eligibility Assessment Report for H-1B Visa Application – [Beneficiary’s Full Name]  
-
-                **Dear USCIS Officer,**  
-
-                **Introduction**  
-                  **Parties & Purpose:** “[Employer’s Name] (the “Petitioner”) respectfully submits this Eligibility Assessment Report on behalf of **[Beneficiary’s Name]** (the “Beneficiary”) in support of its H-1B petition.”  
-                  **Position Overview:** Title: _[Position Title]_; SOC Code: _[Code]_; Worksite: _[City, State]_.  
-                  **Statutory Basis:** Assessment conducted under INA § 214(i) governing specialty occupations.  
-
-                **Eligibility Evaluation**  
-                  **Specialty Occupation Criteria (INA § 214(i) & 8 C.F.R. § 214.2(h)(4)(iii)):**  
-                      Position requires theoretical and practical application of a body of highly specialized knowledge.  
-                      Duties are sufficiently complex and specialized to require at least a bachelor’s degree in _[Field]_.  
-                **Degree-to-Job Relevance:**  
-                      Beneficiary holds a _[Degree Type]_ in _[Field]_ from _[Institution]_ (Date), directly aligning with the position’s academic requirements.  
-                      Coursework in _[Key Subjects]_ equips Beneficiary to perform _[Duty 1]_ and _[Duty 2]_.  
-                **Employer’s Business Need:**  
-                      Role critical to _[Project/Client]_ with anticipated revenue impact of _$[Amount]_ per quarter.  
-                      No qualified U.S. applicant possesses equivalent combination of education and specialized experience.  
-                      Vacancy would materially delay deliverables and harm competitive standing.  
-
-                **Supporting Evidence & Exhibits**  
-                  **Exhibit A:** Certified copy of Beneficiary’s diploma and official transcripts (with translations).  
-                  **Exhibit B:** Detailed resume/CV and letters of prior employment verification.  
-                  **Exhibit C:** Comprehensive job description detailing specialized duties and SOC alignment.  
-                  **Exhibit D:** Prevailing Wage Determination or certified LCA (Case No. _[Number]_) dated _[Date]_.  
-                  **Exhibit E:** Organizational chart and project plan demonstrating critical role of Beneficiary.  
-
-                **Conclusion & Request**  
-                  **Eligibility Reaffirmed:** “Based on the foregoing analysis and supporting evidence, the Beneficiary meets all requirements for classification in a specialty occupation under INA § 214(i).”  
-                  **Request for Adjudication:** “Petitioner respectfully requests that USCIS approve this H-1B petition for **[Beneficiary’s Name]** promptly.”  
-                  **Point of Contact:** “For any questions or additional information, please contact **[Employer’s Representative Name]**, **[Title]**, at **[Phone Number]** or **[Email Address]**.”  
-
-                **Sincerely,**  
-                \_\_\_\_\_\_\_\_\_\_\_,
-                **[Employer’s Representative Name], [Title]**  
-                **[Company Name]**  
-
-                **cc:** [Attorney’s Name (if applicable)], [Beneficiary], [HR Compliance File]  
-                ```
-
-                Step 3.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
-                Step 4.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
-                Step 5.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
-                Step 6.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file .
-                Step 7. Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
-                """
-            ),
-            model="gpt-4.1",
-            model_settings=ModelSettings(temperature=0.9),
-            tools=[
-                WebSearchTool(),
-                FileSearchTool(
-                    max_num_results=5,
-                    vector_store_ids=[vector_store_id],
-                ),
-            ],
-        ),
-        "Visa Application Summary Report": Agent(
-            name="Visa Application Summary Report Agent",
-            instructions=(
-                f"""
-                Today’s date is {current_date}.
-                You are tasked with generating a visa application summary report consolidating all relevant information for submission.
-
-                **Step 1**: Extract all necessary information from the vector store, including:
-                - Personal details of the beneficiary.
-                - Employer details.
-                - Supporting evidence such as Form I-129, certified LCA, evidence of degree, and employer letters.
-
-                **Step 2**: Use the following structure for the summary report:
-                ```
-                #H-1B Visa Application Summary Report – [Beneficiary’s Full Name]
-                **[Employer’s Name]**  
-                **[Employer’s Address]**  
-                **[City, State, ZIP Code]**  
-
-                **Date:** _YYYY-MM-DD_  
-
-                **Subject:** Visa Application Summary Report – [Beneficiary’s Full Name]  
-
-                **Dear USCIS Officer,**  
-
-                **Introduction**  
-                  **Parties & Purpose:** “[Employer’s Name] (the “Petitioner”) submits this Visa Application Summary Report in support of its H-1B petition for **[Beneficiary’s Name]** (the “Beneficiary”).”  
-                  **Position Overview:** Title: _[Position Title]_; SOC Code: _[Code]_; Worksite: _[City, State]_.  
-                  **Objective:** Provide a concise narrative of the key evidence establishing the Beneficiary’s eligibility under INA § 214(i).  
-
-                **Summary of Evidence**  
-                The record demonstrates beyond question that the Beneficiary possesses the required academic credentials, specialized experience, and employer need for the role. The certified diploma and official transcripts from _[Institution]_ establish the Bachelor’s/Master’s degree in _[Field]_ directly related to the position’s theoretical and practical demands. Detailed employment verification letters and the resume illustrate _[X]_ years of progressive responsibility in _[Specialty Area]_, including leadership of complex projects and demonstrated proficiency with _[Key Tools/Technologies]_. The Labor Condition Application, certified on _[Date]_, confirms the prevailing wage compliance and worksite details. The comprehensive job description and organizational chart contextualize the Beneficiary’s unique contributions to critical client deliverables, underscoring the absence of comparably qualified U.S. applicants. Finally, credential evaluation reports and precedent-citing memoranda reinforce that the duties meet the regulatory definition of a specialty occupation.  
-
-                **Conclusion & Request**  
-                  **Eligibility Reaffirmed:** “Based on the foregoing, the Beneficiary incontrovertibly satisfies all statutory and regulatory requirements for H-1B classification.”  
-                  **Request for Adjudication:** “Petitioner respectfully requests that USCIS approve the H-1B petition for **[Beneficiary’s Name]** without delay.”  
-                  **Point of Contact:** “For any questions or additional documentation, please contact **[Employer’s Representative Name]**, **[Title]**, at **[Phone Number]** or **[Email Address]**.”  
-
-                **Sincerely,**  
-                \_\_\_\_\_\_\_\_\_\_\_,
-                **[Employer’s Representative Name], [Title]**  
-                **[Company Name]**  
-
-                **cc:** [Attorney’s Name (if applicable)], [Beneficiary], [Immigration File]  
-
-                ```
-
-                Step 3.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
-                Step 4.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
-                Step 5.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
-                Step 6.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file .
-                Step 7. Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
-                """
-            ),
-            model="gpt-4.1",
-            model_settings=ModelSettings(temperature=0.9),
-            tools=[
-                WebSearchTool(),
-                FileSearchTool(
-                    max_num_results=5,
+                    max_num_results=50,
                     vector_store_ids=[vector_store_id],
                 ),
             ],
@@ -817,10 +358,7 @@ async def initialize_agents(vector_store_id):
 async def generate_document(file_type, agents):
     """
     Generate a single document using the corresponding agent.
-    
-    Args:
-        file_type (str): The type of document to generate (e.g., "petition_cover_letter").
-        agents (dict): Dictionary of initialized agents.
+
     """
     agent = agents.get(file_type)
     if agent:

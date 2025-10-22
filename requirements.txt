@@ -10,9 +10,7 @@ aiohttp
 aiofiles
 markdown
 beautifulsoup4
-<<<<<<< HEAD
 python-docx
-=======
-python-docx
+PyPDF2
+docx2pdf
 uvicorn
->>>>>>> 298b180593eec7888be759fd446b324f2cd91908

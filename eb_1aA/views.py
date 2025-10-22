@@ -22,11 +22,12 @@ def generate_doc(request):
     generate a single document based on one option, and return its download URL.
     """
     ALLOWED_NAMES = {
-        "form-i-129","form-g-28","form-g-1145","form-i-907",
-        "certified-lca","degree-evidence","employer-letter",
-        "form-i-94","form-w2","form-i-797","form-w2-1099",
-        "professional-certs"
-    }
+       "g-1145","g-28-company","i-907","i-140",
+       "all-degree-certs","awards-recognition","degree-evidence",
+       "birth-certificate","form-i-94","form-w2-1099","publications",
+       "membership-in-org","passport","visa-pages","recommendation-letters",
+       "formation-documents","federal-tax-returns","media-reports"
+     }
 
     if request.method != 'POST':
         return HttpResponseBadRequest('Invalid request method')
