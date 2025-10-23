@@ -1,61 +1,70 @@
 import os
-from docx2pdf import convert
+import environ
+import requests
 from PyPDF2 import PdfMerger
 
-def convert_doc_to_pdf(doc_path, output_dir):
-    """
-    Converts a .docx file to PDF using Microsoft Word via docx2pdf.
-    """
-    filename = os.path.splitext(os.path.basename(doc_path))[0]
-    output_pdf_path = os.path.join(output_dir, f"{filename}.pdf")
+env = environ.Env()
+env.read_env()
 
-    print(f"[INFO] Converting '{doc_path}' to PDF using docx2pdf...")
+API_KEY = env("API_KEY")
 
-    try:
-        convert(doc_path, output_pdf_path)
-        print(f"[SUCCESS] Converted: {output_pdf_path}")
-        return output_pdf_path
-    except Exception as e:
-        print(f"[ERROR] Conversion failed for '{doc_path}'. Reason: {e}")
-        return None
+BASE_URL = "https://api.pdf.co/v1"
+
+def upload_to_pdfco(file_path):
+    """Uploads a local file to PDF.co and returns the uploaded file URL."""
+    url = f"{BASE_URL}/file/upload"
+    headers = {"x-api-key": API_KEY}
+    with open(file_path, "rb") as f:
+        files = {"file": f}
+        resp = requests.post(url, headers=headers, files=files)
+    if resp.status_code == 200:
+        data = resp.json()
+        if not data.get("error"):
+            return data["url"]
+        raise Exception(f"Upload error: {data.get('message')}")
+    raise Exception(f"Upload failed: {resp.status_code} {resp.reason}")
 
 
-def merge_files(file_paths, output_pdf="merged_output.pdf"):
-    """
-    Detects DOC/DOCX files, converts them to PDFs, and merges all PDFs into one.
-    """
-    temp_dir = "temp_converted_pdfs"
-    os.makedirs(temp_dir, exist_ok=True)
-    merger = PdfMerger()
-    pdf_list = []
+def convert_to_pdf(file_url, file_ext, output_name):
+    """Converts DOC/DOCX/Image to PDF using PDF.co, returns PDF URL."""
+    ext = file_ext.lower()
+    if ext in [".doc", ".docx"]:
+        endpoint = "/pdf/convert/from/doc"
+    elif ext in [".jpg", ".jpeg", ".png", ".bmp", ".tiff"]:
+        endpoint = "/pdf/convert/from/image"
+    elif ext == ".pdf":
+        return file_url  # already PDF
+    else:
+        raise ValueError(f"Unsupported file type: {ext}")
 
-    for path in file_paths:
-        ext = os.path.splitext(path)[1].lower()
+    headers = {"x-api-key": API_KEY}
+    payload = {"name": f"{output_name}.pdf", "url": file_url}
 
-        if ext in [".doc", ".docx"]:
-            pdf_path = convert_doc_to_pdf(path, temp_dir)
-            if pdf_path:
-                pdf_list.append(pdf_path)
-        elif ext == ".pdf":
-            pdf_list.append(path)
-        else:
-            print(f"[WARNING] Unsupported file skipped: {path}")
+    resp = requests.post(f"{BASE_URL}{endpoint}", headers=headers, data=payload)
+    if resp.status_code == 200:
+        data = resp.json()
+        if not data.get("error"):
+            return data["url"]
+        raise Exception(f"Conversion error: {data.get('message')}")
+    raise Exception(f"Conversion failed: {resp.status_code} {resp.reason}")
 
-    if not pdf_list:
-        print("[ERROR] No valid PDF or DOC files found.")
-        return
 
-    print(f"[INFO] Merging {len(pdf_list)} files...")
+def merge_pdfs(pdf_urls, output_path):
+    """Merges multiple PDF URLs into one and saves locally."""
+    headers = {"x-api-key": API_KEY}
+    payload = {"name": os.path.basename(output_path), "url": ",".join(pdf_urls)}
 
-    for pdf in pdf_list:
-        merger.append(pdf)
-
-    merger.write(output_pdf)
-    merger.close()
-
-    print(f"[✅ DONE] All files merged into: {output_pdf}")
-
-    # Clean up temporary PDFs
-    for f in os.listdir(temp_dir):
-        os.remove(os.path.join(temp_dir, f))
-    os.rmdir(temp_dir)
+    resp = requests.post(f"{BASE_URL}/pdf/merge", headers=headers, data=payload)
+    if resp.status_code == 200:
+        data = resp.json()
+        if not data.get("error"):
+            # Download merged file
+            r = requests.get(data["url"], stream=True)
+            if r.status_code == 200:
+                with open(output_path, "wb") as f:
+                    for chunk in r:
+                        f.write(chunk)
+                return True
+            raise Exception(f"Download failed: {r.status_code} {r.reason}")
+        raise Exception(f"Merge error: {data.get('message')}")
+    raise Exception(f"Merge failed: {resp.status_code} {resp.reason}")
