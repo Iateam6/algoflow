@@ -12,5 +12,5 @@ markdown
 beautifulsoup4
 python-docx
 PyPDF2
-docx2pdf
+requests
 uvicorn
