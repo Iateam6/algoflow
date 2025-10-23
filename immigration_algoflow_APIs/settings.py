@@ -8,6 +8,7 @@ env = environ.Env()
 env.read_env(BASE_DIR / '.env')
 
 OPENAI_API_KEY = env('OPENAI_API_KEY')
+API_KEY = env('API_KEY')
 
 SECURE_SSL_REDIRECT = False
 
