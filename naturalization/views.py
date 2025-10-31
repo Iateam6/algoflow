@@ -43,7 +43,7 @@ def generate_doc(request):
         if isinstance(f, dict) and f.get("name") in ALLOWED_NAMES and "error" in f:
             return JsonResponse({
                 'download_url': None,
-                'error message': "No allowed files provided please provided the allowed files and try againg"
+                'error_message': "No allowed files provided please provided the allowed files and try againg"
             })
 
     # Filter only allowed-named entries with a URL
@@ -58,7 +58,7 @@ def generate_doc(request):
     if not filtered:
         return JsonResponse({
             'download_url': None,
-            'error message': "No allowed files provided please provided the allowed files and try againg"
+            'error_message': "No allowed files provided please provided the allowed files and try againg"
         })
 
     temp_dir = tempfile.mkdtemp()
@@ -95,7 +95,7 @@ def generate_doc(request):
         if not generated_paths or len(generated_paths) != 1:
             return JsonResponse({
                 'download_url': None,
-                'error message': "Document generation failed"
+                'error_message': "Document generation failed"
             })
 
         # Move generated file into MEDIA_ROOT/generated/
@@ -112,7 +112,7 @@ def generate_doc(request):
 
         return JsonResponse({
             'download_url': download_url,
-            'error message': None
+            'error_message': None
         })
 
     finally:
