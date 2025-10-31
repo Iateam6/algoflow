@@ -13,7 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .utils import handle_doc_generation
 
 def index(request):
-    return HttpResponse('Welcome to DS-160 (Nonimmigrant Visas) API!')
+    return HttpResponse('Welcome to DS-260 (Immigrant Visas) API!')
 
 @csrf_exempt
 def generate_doc(request):
@@ -22,7 +22,8 @@ def generate_doc(request):
     generate a single document based on one option, and return its download URL.
     """
     ALLOWED_NAMES = {
-       "passport","travel-itinerary","ds-160-confirmation"
+        "passport","police-certificates","ds-260-confirmation",
+        "form-i-693","form-i-864","financial-audits"
     }
 
     if request.method != 'POST':
