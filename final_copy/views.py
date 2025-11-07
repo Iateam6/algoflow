@@ -15,7 +15,7 @@ from .utils import convert_to_pdf, merge_pdfs, create_blank_page_pdf, create_doc
 
 
 def index(request):
-    return HttpResponse("Final-copy API (S3 JSON mode)!")
+    return HttpResponse("Final-copy API !")
 
 
 @csrf_exempt
