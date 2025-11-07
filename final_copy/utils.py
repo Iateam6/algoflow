@@ -2,9 +2,9 @@ import os
 from PIL import Image, ImageDraw
 from PyPDF2 import PdfMerger
 from docx import Document
-from docx.shared import Inches
-from docx2txt import process as docx_extract_text
-from pdfminer.high_level import extract_text as pdf_extract_text
+from copy import deepcopy
+from docx.shared import Pt
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfparser import PDFSyntaxError
@@ -86,54 +86,58 @@ async def create_blank_page_pdf(output_path, text=""):
 
 async def create_docx_with_separators(doc_entries, output_path):
     """
-    Create a DOCX with actual embedded content:
-    - If DOCX → append content
-    - If PDF → extract text and append
-    - If Image → embed image
-    - Otherwise → include filename reference
+    Merge multiple DOCX files into one DOCX, each preceded by a title page:
+      - For the first document the title uses the initial paragraph (no extra blank)
+      - For subsequent documents a page break is added BEFORE the title
+      - A page break is added AFTER the title so the document content starts on the next page
+      - The full .docx content is appended (deep-copied element-by-element)
+    doc_entries: list of (name, path) tuples
+    output_path: path to save merged .docx
     """
-    doc = Document()
+
+    merged = Document()
 
     for i, (name, path) in enumerate(doc_entries, start=1):
-        ext = os.path.splitext(path)[1].lower()
-        doc.add_page_break()
-        doc.add_heading(f"{i}. {name}", level=1)
-        doc.add_paragraph(f"Source file: {os.path.basename(path)}")
-
         try:
-            if ext in [".docx"]:
-                # Extract text from DOCX and append
-                text = docx_extract_text(path)
-                if text.strip():
-                    doc.add_paragraph(text)
-                else:
-                    doc.add_paragraph("[No extractable text found in DOCX]")
-                print(f"[OK] Embedded DOCX content: {path}")
+            ext = os.path.splitext(path)[1].lower()
+            if ext != ".docx":
+                print(f"[SKIP] Unsupported file type for {path}")
+                continue
 
-            elif ext in [".pdf"]:
-                # Extract text from PDF
-                text = pdf_extract_text(path)
-                if text.strip():
-                    doc.add_paragraph(text)
-                else:
-                    doc.add_paragraph("[No extractable text found in PDF]")
-                print(f"[OK] Embedded PDF text: {path}")
-
-            elif ext in [".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff"]:
-                # Embed image directly
-                try:
-                    doc.add_picture(path, width=Inches(5.5))
-                    print(f"[OK] Embedded image: {path}")
-                except Exception as e:
-                    print(f"[WARN] Could not insert image {path}: {e}")
-
+            # --- Title paragraph ---
+            if i == 1:
+                # Use the initial paragraph that Document() gives us to avoid leading blanks
+                title_para = merged.paragraphs[0]
+                # replace text (this overwrites any empty runs)
+                title_para.text = f"{i}. {name}"
             else:
-                # Unknown format → just mention it
-                doc.add_paragraph(f"[Unsupported file type: {ext}]")
+                # separate from previous content, then add title paragraph
+                merged.add_page_break()
+                title_para = merged.add_paragraph()
+                title_para.add_run(f"{i}. {name}")
+
+            # style the title
+            title_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run = title_para.runs[0]
+            run.bold = True
+            run.font.size = Pt(22)
+
+            # --- Put a page break so content starts on the next page ---
+            merged.add_page_break()
+
+            # --- Append the content of the sub-document (deep copy XML elements) ---
+            sub_doc = Document(path)
+            for element in sub_doc.element.body:
+                merged.element.body.append(deepcopy(element))
+
+            print(f"[OK] Merged: {path}")
 
         except Exception as e:
-            print(f"[ERROR] Failed embedding {path}: {e}")
-            doc.add_paragraph(f"[Error embedding {os.path.basename(path)}: {e}]")
+            print(f"[ERROR] Could not merge {path}: {e}")
+            # continue with next file
 
-    doc.save(output_path)
-    print(f"[OK] Created DOCX with full content: {output_path}")
+    # --- Save the merged document ---
+    merged.save(output_path)
+    print(f"[OK] Created merged DOCX with title pages: {output_path}")
+    
+
