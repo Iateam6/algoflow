@@ -5,6 +5,11 @@ from docx import Document
 from docx.shared import Inches
 from docx2txt import process as docx_extract_text
 from pdfminer.high_level import extract_text as pdf_extract_text
+from pdfminer.pdfparser import PDFParser
+from pdfminer.pdfdocument import PDFDocument
+from pdfminer.pdfparser import PDFSyntaxError
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
 
 
 async def convert_to_pdf(file_path):
@@ -22,17 +27,49 @@ async def convert_to_pdf(file_path):
 
 
 async def merge_pdfs(pdf_paths, output_path):
-    """Merge multiple PDFs."""
+    """
+    Merge PDFs safely across Windows & Linux.
+    - Validates PDFs before merging
+    - Automatically skips or replaces corrupted files
+    """
     merger = PdfMerger()
+    valid_pdfs = []
+
+    for path in pdf_paths:
+        if not path or not os.path.exists(path):
+            print(f"[WARN] Skipping missing file: {path}")
+            continue
+
+        # Validate PDF with pdfminer.six
+        try:
+            with open(path, "rb") as f:
+                parser = PDFParser(f)
+                PDFDocument(parser)  # attempt to parse
+            valid_pdfs.append(path)
+            print(f"[OK] Valid PDF: {path}")
+
+        except (PDFSyntaxError, Exception) as e:
+            print(f"[WARN] Invalid PDF detected: {path} ({e})")
+            placeholder = output_path + f"_{os.path.basename(path)}_error.pdf"
+            c = canvas.Canvas(placeholder, pagesize=letter)
+            c.setFont("Helvetica", 12)
+            c.drawCentredString(300, 500, f"⚠️ Skipped file: {os.path.basename(path)}")
+            c.drawCentredString(300, 470, f"Error: {str(e)[:100]}")
+            c.save()
+            valid_pdfs.append(placeholder)
+            print(f"[INFO] Added placeholder for bad file: {placeholder}")
+
+    if not valid_pdfs:
+        raise Exception("No valid PDF files to merge.")
+
     try:
-        for pdf in pdf_paths:
-            if os.path.exists(pdf):
-                merger.append(pdf)
+        for pdf in valid_pdfs:
+            merger.append(pdf)
         merger.write(output_path)
         merger.close()
-        print(f"[OK] Merged PDFs: {output_path}")
+        print(f"[OK] Successfully merged {len(valid_pdfs)} PDFs → {output_path}")
     except Exception as e:
-        print(f"[ERROR] Failed to merge PDFs: {e}")
+        print(f"[ERROR] PDF merge failed: {e}")
         raise
 
 
