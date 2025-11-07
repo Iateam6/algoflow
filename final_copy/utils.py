@@ -1,67 +1,70 @@
 import os
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from PyPDF2 import PdfMerger
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
 from docx import Document
-from docx.shared import Pt
-import asyncio
 
 
 # Convert images to PDF
-async def convert_to_pdf(image_path):
+async def convert_to_pdf(file_path):
+    """Convert supported image formats to PDF using Pillow."""
     try:
-        img = Image.open(image_path).convert("RGB")
-        pdf_path = os.path.splitext(image_path)[0] + ".pdf"
-        img.save(pdf_path, "PDF", resolution=100.0)
+        pdf_path = os.path.splitext(file_path)[0] + ".pdf"
+        with Image.open(file_path) as img:
+            img = img.convert("RGB")
+            img.save(pdf_path, "PDF", resolution=100.0)
+        print(f"[OK] Converted image to PDF: {pdf_path}")
         return pdf_path
     except Exception as e:
-        print(f"[ERROR] Failed to convert image to PDF: {e}")
-        raise
+        print(f"[ERROR] Image conversion failed: {e}")
+        return file_path
 
 
 # Merge multiple PDFs
 async def merge_pdfs(pdf_paths, output_path):
+    """Merge multiple PDF files into a single file."""
+    merger = PdfMerger()
     try:
-        merger = PdfMerger()
         for pdf in pdf_paths:
             if os.path.exists(pdf):
                 merger.append(pdf)
         merger.write(output_path)
         merger.close()
+        print(f"[OK] Merged PDFs into {output_path}")
     except Exception as e:
         print(f"[ERROR] Failed to merge PDFs: {e}")
         raise
 
 
-# Create a blank page or one with text
-async def create_blank_page_pdf(output_path, text=None):
-    c = canvas.Canvas(output_path, pagesize=A4)
-    if text:
-        c.setFont("Helvetica-Bold", 18)
-        width, height = A4
-        c.drawCentredString(width / 2, height / 2, text)
-    c.showPage()
-    c.save()
+# Create a blank separator page as PDF
+async def create_blank_page_pdf(output_path, text=""):
+    """Create a simple PDF separator page with optional text."""
+    try:
+        width, height = 595, 842  # A4 size in points
+        img = Image.new("RGB", (width, height), "white")
+        draw = ImageDraw.Draw(img)
+
+        # Basic text placement
+        if text:
+            draw.text((100, height // 2), text, fill="black")
+
+        img.save(output_path, "PDF")
+        print(f"[OK] Created separator page: {output_path}")
+    except Exception as e:
+        print(f"[ERROR] Failed to create blank page: {e}")
+        raise
 
 
-# Create DOCX with separators for each AI-generated document
+# Create a DOCX file with separator pages for each AI-generated document
 async def create_docx_with_separators(docs, output_path):
-    document = Document()
-
-    for i, doc in enumerate(docs, start=1):
-        name = doc.get("name", f"Document {i}")
-        url = doc.get("url", "")
-
-        # Add separator title page
-        title = document.add_paragraph()
-        run = title.add_run(name)
-        run.bold = True
-        run.font.size = Pt(20)
-        document.add_paragraph(f"URL: {url}")
-
-        # Add page break after each doc except the last
-        if i < len(docs):
-            document.add_page_break()
-
-    document.save(output_path)
+    """Generate DOCX file with separators for each AI document entry."""
+    try:
+        doc = Document()
+        for i, doc_text in enumerate(docs, start=1):
+            doc.add_page_break()
+            doc.add_heading(f"Document {i}", level=1)
+            doc.add_paragraph(doc_text)
+        doc.save(output_path)
+        print(f"[OK] DOCX file created: {output_path}")
+    except Exception as e:
+        print(f"[ERROR] Failed to create DOCX file: {e}")
+        raise
