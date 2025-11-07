@@ -13,5 +13,6 @@ beautifulsoup4
 python-docx
 PyPDF2
 pillow
+reportlab
 requests
 uvicorn
