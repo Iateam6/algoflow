@@ -11,113 +11,138 @@ import aiofiles
 from django.conf import settings
 from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
-from asgiref.sync import async_to_sync  
+from asgiref.sync import async_to_sync
 
-from .utils import upload_to_pdfco, convert_to_pdf, merge_pdfs
+from .utils import (
+    convert_to_pdf,
+    merge_pdfs,
+    create_blank_page_pdf,
+    create_docx_with_separators,
+)
 
 
 def index(request):
-    return HttpResponse('Final-copy API!')
+    return HttpResponse("Final-copy API!")
 
 
 @csrf_exempt
 def final_copy(request):
-    if request.method != 'POST':
-        return HttpResponseBadRequest('Invalid request method')
+    if request.method != "POST":
+        return HttpResponseBadRequest("Invalid request method")
 
     try:
         payload = json.loads(request.body)
+        docs = payload.get("docs", [])
+        forms = payload.get("forms", [])
         files = payload.get("files", [])
-        if not files or not isinstance(files, list):
-            return HttpResponseBadRequest('Invalid or missing "files" array')
+
+        print("[DEBUG] Incoming request payload:", payload)
+
     except Exception as e:
-        print(f"[ERROR] Invalid JSON data: {e}")
-        return HttpResponseBadRequest(f'Invalid JSON data: {e}')
+        print("[ERROR] JSON Parse Failed:", e)
+        return HttpResponseBadRequest(f"Invalid JSON: {e}")
 
-    print(f"[INFO] Received {len(files)} file(s) to process.")
+    if not isinstance(files, list) or not isinstance(forms, list):
+        print("[ERROR] Files or Forms is not a list")
+        return HttpResponseBadRequest("Invalid input format.")
 
-    # Run the async logic inside a helper
-    return async_to_sync(process_final_copy)(request, files)
+    return async_to_sync(process_final_copy)(request, docs, files, forms)
 
 
-# 🔽 define async helper (can use await inside)
-async def process_final_copy(request, files):
+# ------------------- ASYNC HANDLER -------------------
+async def process_final_copy(request, docs, files, forms):
+    print("[DEBUG] Starting final_copy processing...")
+
     temp_dir = tempfile.mkdtemp()
-    temp_paths = []
+    print("[DEBUG] Temporary directory created:", temp_dir)
 
     try:
-        # Download all input files
         async with aiohttp.ClientSession() as session:
-            for i, url in enumerate(files, start=1):
-                print(f"[STEP 1] Downloading file {i}: {url}")
-                try:
-                    async with session.get(url, timeout=60) as resp:
-                        if resp.status != 200:
-                            raise Exception(f"HTTP {resp.status}: {resp.reason}")
 
-                        cd = resp.headers.get('content-disposition')
-                        if cd:
-                            _, params = cgi.parse_header(cd)
-                            filename = params.get('filename') or os.path.basename(urllib.parse.urlparse(url).path)
-                        else:
-                            filename = os.path.basename(urllib.parse.urlparse(url).path)
+            async def download_file(url):
+                print(f"[DEBUG] Downloading: {url}")
+                async with session.get(url, timeout=60) as resp:
+                    if resp.status != 200:
+                        raise Exception(f"HTTP {resp.status}: {resp.reason}")
 
-                        path = urllib.parse.urlparse(url).path
-                        suffix = os.path.splitext(path)[1]
-                        if not filename.endswith(suffix):
-                            filename = f"{filename}{suffix}"
+                    cd = resp.headers.get("content-disposition")
+                    if cd:
+                        _, params = cgi.parse_header(cd)
+                        filename = params.get("filename") or os.path.basename(
+                            urllib.parse.urlparse(url).path
+                        )
+                    else:
+                        filename = os.path.basename(urllib.parse.urlparse(url).path)
 
-                        local_path = os.path.join(temp_dir, filename)
-                        async with aiofiles.open(local_path, 'wb') as tmp_file:
-                            async for chunk in resp.content.iter_chunked(8192):
-                                await tmp_file.write(chunk)
+                    if not os.path.splitext(filename)[1]:
+                        filename += ".pdf"
 
-                        temp_paths.append(local_path)
-                        print(f"[INFO] Saved to: {local_path}")
+                    local_path = os.path.join(temp_dir, filename)
+                    print(f"[DEBUG] Saving downloaded file as: {local_path}")
 
-                except Exception as e:
-                    print(f"[ERROR] Failed to download {url}: {e}")
-                    return HttpResponseBadRequest(f'Error downloading {url}: {e}')
+                    async with aiofiles.open(local_path, "wb") as f:
+                        async for chunk in resp.content.iter_chunked(8192):
+                            await f.write(chunk)
 
-        # Upload and Convert docx,doc and image file
-        pdf_urls = []
-        for i, file_path in enumerate(temp_paths, start=1):
-            print(f"[STEP 2] Uploading & converting file {i}/{len(temp_paths)}: {file_path}")
-            try:
-                file_name, ext = os.path.splitext(os.path.basename(file_path))
-                uploaded_url = await upload_to_pdfco(file_path)
-                print(f"[INFO] Uploaded to: {uploaded_url}")
+                    print(f"[DEBUG] Download complete: {local_path}")
+                    return local_path
 
-                pdf_url = await convert_to_pdf(uploaded_url, ext, file_name)
-                print(f"[INFO] Converted to PDF: {pdf_url}")
+            async def ensure_pdf(file_path):
+                if not file_path.lower().endswith(".pdf"):
+                    print(f"[DEBUG] Converting to PDF: {file_path}")
+                    return await convert_to_pdf(file_path)
+                print(f"[DEBUG] Already a PDF: {file_path}")
+                return file_path
 
-                pdf_urls.append(pdf_url)
-                await asyncio.sleep(1)
-            except Exception as e:
-                print(f"[ERROR] Conversion failed for {file_path}: {e}")
+            print("[DEBUG] Downloading files...")
+            file_paths = await asyncio.gather(*[download_file(url) for url in files])
+            form_paths = await asyncio.gather(*[download_file(url) for url in forms])
 
-        # Merge
-        if not pdf_urls:
-            return HttpResponseBadRequest("No valid PDFs found to merge.")
+            print("[DEBUG] Converting to PDF if needed...")
+            file_pdfs = [await ensure_pdf(f) for f in file_paths]
+            form_pdfs = [await ensure_pdf(f) for f in form_paths]
 
-        output_pdf = os.path.join(temp_dir, "final_copy.pdf")
-        await merge_pdfs(pdf_urls, output_pdf)
+            print("[DEBUG] Creating separator page...")
+            separator_pdf = os.path.join(temp_dir, "separator.pdf")
+            await create_blank_page_pdf(separator_pdf, text="--- Supporting Documents ---")
 
-        # Save to MEDIA_ROOT
-        media_dir = os.path.join(settings.MEDIA_ROOT, 'generated')
-        os.makedirs(media_dir, exist_ok=True)
-        final_path = os.path.join(media_dir, "final_copy.pdf")
-        shutil.move(output_pdf, final_path)
+            print("[DEBUG] Merging all PDFs...")
+            merged_group_pdf = os.path.join(temp_dir, "final_copy.pdf")
+            await merge_pdfs(file_pdfs + [separator_pdf] + form_pdfs, merged_group_pdf)
 
-        # Return download URL
-        rel_path = os.path.join(settings.MEDIA_URL.lstrip('/'), 'generated', 'final_copy.pdf')
-        download_url = request.build_absolute_uri(f"/{rel_path}")
+            print("[DEBUG] Generating DOCX with separators...")
+            docx_output = os.path.join(temp_dir, "final_copy.docx")
+            await create_docx_with_separators(docs, docx_output)
 
-        print(f"[SUCCESS] Final file available at: {download_url}")
-        return JsonResponse({'download_url': download_url})
+            print("[DEBUG] Moving output files to MEDIA_ROOT...")
+            media_dir = os.path.join(settings.MEDIA_ROOT, "generated")
+            os.makedirs(media_dir, exist_ok=True)
+
+            final_pdf_path = os.path.join(media_dir, "final_copy.pdf")
+            final_docx_path = os.path.join(media_dir, "final_copy.docx")
+
+            shutil.move(merged_group_pdf, final_pdf_path)
+            shutil.move(docx_output, final_docx_path)
+
+            print("[DEBUG] Files saved:")
+            print("       PDF :", final_pdf_path)
+            print("       DOCX:", final_docx_path)
+
+            pdf_rel_path = os.path.join(settings.MEDIA_URL.lstrip("/"), "generated", "final_copy.pdf")
+            docx_rel_path = os.path.join(settings.MEDIA_URL.lstrip("/"), "generated", "final_copy.docx")
+
+            pdf_url = request.build_absolute_uri(f"/{pdf_rel_path}")
+            docx_url = request.build_absolute_uri(f"/{docx_rel_path}")
+
+            print("[DEBUG] Returning response with URLs")
+            return JsonResponse({
+                "final_pdf_url": pdf_url,
+                "final_docx_url": docx_url
+            })
 
     finally:
         try:
+            print("[DEBUG] Cleaning up temporary directory:", temp_dir)
             shutil.rmtree(temp_dir)
         except Exception as e:
             print(f"[WARN] Cleanup failed: {e}")
