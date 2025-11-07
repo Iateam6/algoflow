@@ -15,7 +15,7 @@ from .utils import convert_to_pdf, merge_pdfs, create_blank_page_pdf, create_doc
 
 
 def index(request):
-    return HttpResponse("Final-copy API !")
+    return HttpResponse("Final-copy API (robust version)!")
 
 
 @csrf_exempt
@@ -33,6 +33,7 @@ def final_copy(request):
     except Exception as e:
         return HttpResponseBadRequest(f"Invalid JSON payload: {e}")
 
+    # Ensure valid structure
     if not isinstance(docs, list) or not isinstance(forms, list) or not isinstance(files, list):
         return HttpResponseBadRequest("Invalid structure in JSON payload")
 
@@ -50,6 +51,9 @@ async def process_final_copy(request, docs, files, forms):
 
             async def download_file(url, name_hint=None):
                 """Download a file from a URL to the temporary directory."""
+                if not url:
+                    print("[WARN] Empty URL encountered — skipping download.")
+                    return None
                 try:
                     headers = {
                         "User-Agent": (
@@ -70,7 +74,7 @@ async def process_final_copy(request, docs, files, forms):
                         else:
                             filename = os.path.basename(urllib.parse.urlparse(url).path)
 
-                        # If no filename, use the provided hint
+                        # Fallback filename if missing
                         if not filename:
                             filename = f"{name_hint or 'file'}.pdf"
 
@@ -86,7 +90,7 @@ async def process_final_copy(request, docs, files, forms):
 
             async def ensure_pdf(file_path, is_image_only=False):
                 """Convert images to PDF only if is_image_only=True."""
-                if not file_path:
+                if not file_path or not os.path.exists(file_path):
                     return None
                 ext = os.path.splitext(file_path)[1].lower()
                 valid_images = [".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tif", ".tiff"]
@@ -94,45 +98,61 @@ async def process_final_copy(request, docs, files, forms):
                     return await convert_to_pdf(file_path)
                 return file_path
 
-            # Step 1: Download all files
-            print("[STEP 1] Downloading files...")
-            file_paths = await asyncio.gather(*[download_file(url) for url in files])
-            form_paths = await asyncio.gather(*[download_file(url) for url in forms])
+            # Step 1: Download supporting files
+            print("[STEP 1] Downloading supporting files...")
+            file_paths = await asyncio.gather(*[download_file(url) for url in files if url])
+            file_paths = [p for p in file_paths if p]  # remove None
 
-            # Step 2: Download docs (with names)
-            print("[STEP 2] Downloading docs...")
+            # Step 2: Download form files
+            print("[STEP 2] Downloading forms...")
+            form_paths = await asyncio.gather(*[download_file(url) for url in forms if url])
+            form_paths = [p for p in form_paths if p]
+
+            # Step 3: Download docs (with names)
+            print("[STEP 3] Downloading named docs...")
             doc_paths = []
             for d in docs:
                 name = d.get("name", "Document")
                 url = d.get("url")
                 if not url:
+                    print(f"[WARN] Skipping doc with no URL: {name}")
                     continue
                 path = await download_file(url, name_hint=name)
                 if path:
                     doc_paths.append((name, path))
 
-            # Step 3: Convert images (only in files)
-            print("[STEP 3] Converting images in 'files' only...")
+            # Step 4: Convert images (only in files)
+            print("[STEP 4] Converting image files to PDFs...")
             file_pdfs = [await ensure_pdf(f, is_image_only=True) for f in file_paths if f]
             form_pdfs = [await ensure_pdf(f) for f in form_paths if f]
 
-            # Step 4: Create separator
+            # Step 5: Create a separator for forms
+            print("[STEP 5] Creating separator page...")
             separator_pdf = os.path.join(temp_dir, "separator.pdf")
-            await create_blank_page_pdf(separator_pdf, text="--- Supporting Documents ---")
+            await create_blank_page_pdf(separator_pdf, text="--- Supporting Documents and Forms ---")
 
-            # Step 5: Merge PDFs (files + separator + forms)
-            print("[STEP 5] Merging all PDFs...")
+            # Step 6: Merge all PDFs safely
+            print("[STEP 6] Merging all PDFs...")
             merged_pdf = os.path.join(temp_dir, "final_copy.pdf")
+
             all_pdfs = [*file_pdfs, separator_pdf, *form_pdfs]
-            all_pdfs = [p for p in all_pdfs if os.path.exists(p)]
+            all_pdfs = [p for p in all_pdfs if p and os.path.exists(p) and os.path.getsize(p) > 0]
+
+            if not all_pdfs:
+                print("[WARN] No valid PDFs found to merge — creating placeholder.")
+                placeholder = os.path.join(temp_dir, "placeholder.pdf")
+                await create_blank_page_pdf(placeholder, text="⚠️ No valid PDF content available")
+                all_pdfs = [placeholder]
+
             await merge_pdfs(all_pdfs, merged_pdf)
 
-            # Step 6: Create DOCX (one section per doc entry)
-            print("[STEP 6] Creating DOCX...")
+            # Step 7: Create DOCX (with separators & embedded content)
+            print("[STEP 7] Creating DOCX with embedded documents...")
             docx_path = os.path.join(temp_dir, "final_copy.docx")
             await create_docx_with_separators(doc_paths, docx_path)
 
-            # Step 7: Move results to MEDIA_ROOT
+            # Step 8: Move results to MEDIA_ROOT
+            print("[STEP 8] Moving output files to MEDIA_ROOT...")
             media_dir = os.path.join(settings.MEDIA_ROOT, "generated")
             os.makedirs(media_dir, exist_ok=True)
             final_pdf_path = os.path.join(media_dir, "final_copy.pdf")
@@ -140,7 +160,7 @@ async def process_final_copy(request, docs, files, forms):
             shutil.move(merged_pdf, final_pdf_path)
             shutil.move(docx_path, final_docx_path)
 
-            # Step 8: Return URLs
+            # Step 9: Return URLs
             pdf_url = request.build_absolute_uri(f"{settings.MEDIA_URL}generated/final_copy.pdf")
             docx_url = request.build_absolute_uri(f"{settings.MEDIA_URL}generated/final_copy.docx")
 
@@ -149,6 +169,10 @@ async def process_final_copy(request, docs, files, forms):
                 "final_pdf_url": pdf_url,
                 "final_docx_url": docx_url
             })
+
+    except Exception as e:
+        print(f"[FATAL] Error during processing: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
 
     finally:
         try:
