@@ -11,7 +11,7 @@ from django.conf import settings
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from asgiref.sync import async_to_sync
-from .utils import convert_to_pdf, merge_pdfs, create_blank_page_pdf, merge_docx_with_breaks
+from .utils import convert_to_pdf, merge_pdfs, create_blank_page_pdf, prepend_cover_and_merge
 
 
 def index(request):
@@ -129,7 +129,7 @@ async def process_final_copy(request, docs, files, forms):
             # Step 5: Create a separator for forms
             print("[STEP 5] Creating separator page...")
             separator_pdf = os.path.join(temp_dir, "separator.pdf")
-            await create_blank_page_pdf(separator_pdf, text="--- Forms Documents ---")
+            await create_blank_page_pdf(separator_pdf, text="--- Supporting Documents and Forms ---")
 
             # Step 6: Merge all PDFs safely
             print("[STEP 6] Merging all PDFs...")
@@ -149,7 +149,7 @@ async def process_final_copy(request, docs, files, forms):
             # Step 7: Create DOCX (with separators & embedded content)
             print("[STEP 7] Creating DOCX with embedded documents...")
             docx_path = os.path.join(temp_dir, "final_copy.docx")
-            await merge_docx_with_breaks(doc_paths, docx_path)
+            prepend_cover_and_merge(doc_paths, docx_path)
 
             # Step 8: Move results to MEDIA_ROOT
             print("[STEP 8] Moving output files to MEDIA_ROOT...")
