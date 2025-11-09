@@ -3,13 +3,22 @@ from PIL import Image, ImageDraw
 from PyPDF2 import PdfMerger
 from docx import Document
 from copy import deepcopy
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 from docx.shared import Pt
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.table import WD_ALIGN_VERTICAL, WD_ROW_HEIGHT_RULE
+from docx.enum.text import WD_BREAK, WD_PARAGRAPH_ALIGNMENT
+from docxcompose.composer import Composer
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfparser import PDFSyntaxError
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
+
+import os
+from pathlib import Path
+from copy import deepcopy
+from typing import List, Tuple, Union, Optional
 
 
 async def convert_to_pdf(file_path):
@@ -84,20 +93,13 @@ async def create_blank_page_pdf(output_path, text=""):
     print(f"[OK] Created separator PDF: {output_path}")
 
 
+# DOCX utilities
 
-async def merge_docx_with_breaks(doc_entries, output_path, name_font_size=16):
-    """
-    Create a merged DOCX where for each file we add:
-      [separator page with filename] -> [that file's contents]
-    Repeats for each file in doc_entries in order.
+def _is_sectPr(element) -> bool:
+    return element.tag.endswith('}sectPr') or element.tag.endswith('sectPr')
 
-    doc_entries: list of paths or list of (display_name, path) tuples
-    output_path: path to save merged .docx
-    """
-    if not doc_entries:
-        raise ValueError("doc_entries is empty")
 
-    # Normalize inputs to (display_name, path)
+def _normalize(doc_entries):
     normalized = []
     for e in doc_entries:
         if isinstance(e, (list, tuple)) and len(e) >= 2:
@@ -105,47 +107,117 @@ async def merge_docx_with_breaks(doc_entries, output_path, name_font_size=16):
         else:
             p = str(e)
             normalized.append((os.path.basename(p), p))
+    return normalized
 
-    merged = Document()
 
-    # Remove default empty paragraph if present
-    if merged.paragraphs:
-        p = merged.paragraphs[0]
-        p._element.getparent().remove(p._element)
+def prepend_cover_and_merge(
+   doc_entries: List[Union[str, Tuple[str, str]]],
+    merged_output_path: str,
+    name_font_size: int = 16,
+) -> str:
+    """
+    Each file -> make a copy with a true full-page cover (its own filename centered both
+    vertically & horizontally).  Those new files are saved in 'with_covers' subfolder.
+    Then merge all new files (once each, in order) into merged_output_path.
+    """
+    normalized = _normalize(doc_entries)
+    merged_output = Path(merged_output_path)
+    output_dir = merged_output.parent / "with_covers"
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    total = len(normalized)
+    new_files = []
 
-    for idx, (display_name, path) in enumerate(normalized):
+    # Step 1: create per-file cover + content
+    for display_name, path in normalized:
+        p = Path(path)
+        if not p.exists() or not p.suffix.lower().endswith(".docx"):
+            print(f"[SKIP] {path}")
+            continue
+
         try:
-            if not path.lower().endswith(".docx"):
-                print(f"[SKIP] Unsupported file type: {path}")
-                continue
+            original = Document(str(p))
+            new_doc = Document()
 
-            # --- 1) Add separator paragraph with filename centered & bold ---
-            sep_par = merged.add_paragraph()
-            sep_par.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-            run = sep_par.add_run(display_name)
+            # Copy section layout
+            try:
+                src = original.sections[0]
+                dst = new_doc.sections[0]
+                dst.page_width, dst.page_height = src.page_width, src.page_height
+                dst.top_margin, dst.bottom_margin = src.top_margin, src.bottom_margin
+                dst.left_margin, dst.right_margin = src.left_margin, src.right_margin
+            except Exception:
+                pass
+
+            # Remove default empty paragraph
+            if new_doc.paragraphs:
+                p0 = new_doc.paragraphs[0]
+                p0._element.getparent().remove(p0._element)
+
+            # Printable area
+            sec = new_doc.sections[0]
+            printable_w = sec.page_width - sec.left_margin - sec.right_margin
+            printable_h = sec.page_height - sec.top_margin - sec.bottom_margin
+
+            # 1x1 table for true centered text
+            tbl = new_doc.add_table(rows=1, cols=1)
+            tbl.autofit = False
+            cell = tbl.cell(0, 0)
+            cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+            para = cell.paragraphs[0]
+            para.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+            run = para.add_run(display_name)
             run.bold = True
             run.font.size = Pt(name_font_size)
 
-            # Move to next page so the document content starts on its own page
-            sep_par.add_run().add_break(WD_BREAK.PAGE)
+            # borderless
+            tbl_pr = tbl._tblPr
+            borders = OxmlElement("w:tblBorders")
+            for side in ("top", "left", "bottom", "right", "insideH", "insideV"):
+                b = OxmlElement(f"w:{side}")
+                b.set(qn("w:val"), "nil")
+                borders.append(b)
+            tbl_pr.append(borders)
 
-            # --- 2) Append the current document body into merged ---
-            sub_doc = Document(path)
-            for element in sub_doc.element.body:
-                merged.element.body.append(deepcopy(element))
+            # size table
+            try:
+                tbl.columns[0].width = printable_w
+                row = tbl.rows[0]
+                row.height = printable_h
+                row.height_rule = WD_ROW_HEIGHT_RULE.EXACTLY
+            except Exception:
+                pass
 
-            # --- 3) If not the last file, add a page break so next separator starts on a fresh page ---
-            if idx < total - 1:
-                merged.add_paragraph().add_run().add_break(WD_BREAK.PAGE)
+            para.add_run().add_break(WD_BREAK.PAGE)
 
-            print(f"[OK] Merged: {path}")
+            # append original body
+            for el in original.element.body:
+                new_doc.element.body.append(deepcopy(el))
+
+            # save in new folder
+            new_path = output_dir / p.name
+            new_doc.save(str(new_path))
+            new_files.append(new_path)
+            print(f"[OK] Created cover for {p.name}")
+
         except Exception as e:
-            print(f"[ERROR] Could not merge {path}: {e}")
+            print(f"[ERROR] {path}: {e}")
 
-    merged.save(output_path)
-    print(f"[OK] Final merged DOCX saved: {output_path}")
+    # Step 2: merge only those new files (once each)
+    merged = Document()
+    if merged.paragraphs:
+        p0 = merged.paragraphs[0]
+        p0._element.getparent().remove(p0._element)
 
+    for nf in new_files:
+        try:
+            doc = Document(str(nf))
+            for el in doc.element.body:
+                if not _is_sectPr(el):
+                    merged.element.body.append(deepcopy(el))
+            print(f"[MERGED] {nf.name}")
+        except Exception as e:
+            print(f"[ERROR MERGING] {nf}: {e}")
 
-
+    merged.save(str(merged_output))
+    print(f"[DONE] Merged DOCX saved: {merged_output}")
+    return str(merged_output)
