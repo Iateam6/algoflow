@@ -86,13 +86,14 @@ async def create_blank_page_pdf(output_path, text=""):
 
 async def create_docx_with_separators(doc_entries, output_path):
     """
-    Merge multiple DOCX files into one DOCX, each preceded by a title page:
-      - For the first document the title uses the initial paragraph (no extra blank)
-      - For subsequent documents a page break is added BEFORE the title
-      - A page break is added AFTER the title so the document content starts on the next page
-      - The full .docx content is appended (deep-copied element-by-element)
-    doc_entries: list of (name, path) tuples
-    output_path: path to save merged .docx
+    Merge multiple DOCX files into one DOCX where:
+      - Each section starts with a centered bold title (e.g., "1. Document Name")
+      - Then includes the content of the original DOCX
+      - Followed by a centered bold title (e.g., "2. Document Name") before the next document begins
+
+    Parameters:
+      doc_entries: list of (name, path) tuples
+      output_path: str, file path to save the merged .docx
     """
 
     merged = Document()
@@ -104,40 +105,36 @@ async def create_docx_with_separators(doc_entries, output_path):
                 print(f"[SKIP] Unsupported file type for {path}")
                 continue
 
-            # --- Title paragraph ---
+            # --- Title paragraph before content ---
             if i == 1:
-                # Use the initial paragraph that Document() gives us to avoid leading blanks
                 title_para = merged.paragraphs[0]
-                # replace text (this overwrites any empty runs)
                 title_para.text = f"{i}. {name}"
             else:
-                # separate from previous content, then add title paragraph
-                merged.add_page_break()
-                title_para = merged.add_paragraph()
-                title_para.add_run(f"{i}. {name}")
+                title_para = merged.add_paragraph(f"{i}. {name}")
 
-            # style the title
             title_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
             run = title_para.runs[0]
             run.bold = True
             run.font.size = Pt(22)
 
-            # --- Put a page break so content starts on the next page ---
-            merged.add_page_break()
-
-            # --- Append the content of the sub-document (deep copy XML elements) ---
+            # --- Append content of sub-document ---
             sub_doc = Document(path)
             for element in sub_doc.element.body:
                 merged.element.body.append(deepcopy(element))
+
+            # --- Title paragraph after content ---
+            title_after = merged.add_paragraph(f"{i}. {name}")
+            title_after.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run_after = title_after.runs[0]
+            run_after.bold = True
+            run_after.font.size = Pt(22)
 
             print(f"[OK] Merged: {path}")
 
         except Exception as e:
             print(f"[ERROR] Could not merge {path}: {e}")
-            # continue with next file
+            continue
 
     # --- Save the merged document ---
     merged.save(output_path)
-    print(f"[OK] Created merged DOCX with title pages: {output_path}")
-    
-
+    print(f"[OK] Created merged DOCX with titles before and after content: {output_path}")
