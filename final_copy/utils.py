@@ -84,33 +84,32 @@ async def create_blank_page_pdf(output_path, text=""):
     print(f"[OK] Created separator PDF: {output_path}")
 
 
-async def merge_docx_with_page_breaks(doc_entries, output_path):
+async def merge_docx_with_breaks(doc_entries, output_path):
     """
-    Merge multiple DOCX files into one DOCX with page breaks between each file.
+    Merge DOCX files with a page break after each one (including the last).
     
     doc_entries: list of (name, path) tuples
     output_path: path to save merged .docx
     """
     merged = Document()
 
-    for i, (_, path) in enumerate(doc_entries):
+    for _, path in doc_entries:
         try:
-            ext = os.path.splitext(path)[1].lower()
-            if ext != ".docx":
-                print(f"[SKIP] Unsupported file type for {path}")
+            if not path.lower().endswith(".docx"):
+                print(f"[SKIP] Unsupported file type: {path}")
                 continue
 
             sub_doc = Document(path)
             for element in sub_doc.element.body:
                 merged.element.body.append(deepcopy(element))
 
-            # Add page break after each document except the last
-            if i < len(doc_entries) - 1:
-                merged.add_page_break()
+            # Always add a page break after each document
+            merged.add_page_break()
 
             print(f"[OK] Merged: {path}")
         except Exception as e:
             print(f"[ERROR] Could not merge {path}: {e}")
 
     merged.save(output_path)
-    print(f"[OK] Created merged DOCX: {output_path}")
+    print(f"[OK] Final merged DOCX saved: {output_path}")
+
