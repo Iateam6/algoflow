@@ -129,7 +129,7 @@ async def process_final_copy(request, docs, files, forms):
             # Step 5: Create a separator for forms
             print("[STEP 5] Creating separator page...")
             separator_pdf = os.path.join(temp_dir, "separator.pdf")
-            await create_blank_page_pdf(separator_pdf, text="--- Supporting Documents and Forms ---")
+            await create_blank_page_pdf(separator_pdf, text="--- Forms Documents ---")
 
             # Step 6: Merge all PDFs safely
             print("[STEP 6] Merging all PDFs...")
