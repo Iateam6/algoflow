@@ -86,48 +86,31 @@ async def create_blank_page_pdf(output_path, text=""):
 
 async def create_docx_with_separators(doc_entries, output_path):
     """
-    Merge multiple DOCX files into one DOCX where:
-      - Each section starts with a centered bold title (e.g., "1. Document Name")
-      - Then includes the content of the original DOCX
-      - Followed by a centered bold title (e.g., "2. Document Name") before the next document begins
+    Merge multiple DOCX files into one DOCX with a page break between each file.
 
     Parameters:
       doc_entries: list of (name, path) tuples
-      output_path: str, file path to save the merged .docx
+      output_path: str, path to save the merged .docx
     """
 
     merged = Document()
 
-    for i, (name, path) in enumerate(doc_entries, start=1):
+    for i, (_, path) in enumerate(doc_entries):
         try:
             ext = os.path.splitext(path)[1].lower()
             if ext != ".docx":
                 print(f"[SKIP] Unsupported file type for {path}")
                 continue
 
-            # --- Title paragraph before content ---
-            if i == 1:
-                title_para = merged.paragraphs[0]
-                title_para.text = f"{i}. {name}"
-            else:
-                title_para = merged.add_paragraph(f"{i}. {name}")
-
-            title_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            run = title_para.runs[0]
-            run.bold = True
-            run.font.size = Pt(22)
-
-            # --- Append content of sub-document ---
             sub_doc = Document(path)
+
+            # Append the content of each sub-document
             for element in sub_doc.element.body:
                 merged.element.body.append(deepcopy(element))
 
-            # --- Title paragraph after content ---
-            title_after = merged.add_paragraph(f"{i}. {name}")
-            title_after.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            run_after = title_after.runs[0]
-            run_after.bold = True
-            run_after.font.size = Pt(22)
+            # Add a page break after each document except the last one
+            if i < len(doc_entries) - 1:
+                merged.add_page_break()
 
             print(f"[OK] Merged: {path}")
 
@@ -135,6 +118,5 @@ async def create_docx_with_separators(doc_entries, output_path):
             print(f"[ERROR] Could not merge {path}: {e}")
             continue
 
-    # --- Save the merged document ---
     merged.save(output_path)
-    print(f"[OK] Created merged DOCX with titles before and after content: {output_path}")
+    print(f"[OK] Created merged DOCX with page breaks: {output_path}")
