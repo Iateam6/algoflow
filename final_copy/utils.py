@@ -85,30 +85,60 @@ async def create_blank_page_pdf(output_path, text=""):
 
 
 
-async def merge_docx_with_breaks(doc_entries, output_path):
+async def merge_docx_with_breaks(doc_entries, output_path, name_font_size=16):
     """
-    Merge DOCX files with a page break between each file.
+    Create a merged DOCX where for each file we add:
+      [separator page with filename] -> [that file's contents]
+    Repeats for each file in doc_entries in order.
+
+    doc_entries: list of paths or list of (display_name, path) tuples
+    output_path: path to save merged .docx
     """
+    if not doc_entries:
+        raise ValueError("doc_entries is empty")
+
+    # Normalize inputs to (display_name, path)
+    normalized = []
+    for e in doc_entries:
+        if isinstance(e, (list, tuple)) and len(e) >= 2:
+            normalized.append((str(e[0]), str(e[1])))
+        else:
+            p = str(e)
+            normalized.append((os.path.basename(p), p))
+
     merged = Document()
 
-    # Remove default empty paragraph
+    # Remove default empty paragraph if present
     if merged.paragraphs:
         p = merged.paragraphs[0]
         p._element.getparent().remove(p._element)
 
-    for i, (_, path) in enumerate(doc_entries):
+    total = len(normalized)
+
+    for idx, (display_name, path) in enumerate(normalized):
         try:
             if not path.lower().endswith(".docx"):
                 print(f"[SKIP] Unsupported file type: {path}")
                 continue
 
+            # --- 1) Add separator paragraph with filename centered & bold ---
+            sep_par = merged.add_paragraph()
+            sep_par.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+            run = sep_par.add_run(display_name)
+            run.bold = True
+            run.font.size = Pt(name_font_size)
+
+            # Move to next page so the document content starts on its own page
+            sep_par.add_run().add_break(WD_BREAK.PAGE)
+
+            # --- 2) Append the current document body into merged ---
             sub_doc = Document(path)
             for element in sub_doc.element.body:
                 merged.element.body.append(deepcopy(element))
 
-            # Add page break only if not the last document
-            if i < len(doc_entries) - 1:
-                merged.paragraphs[-1].add_run().add_break()
+            # --- 3) If not the last file, add a page break so next separator starts on a fresh page ---
+            if idx < total - 1:
+                merged.add_paragraph().add_run().add_break(WD_BREAK.PAGE)
 
             print(f"[OK] Merged: {path}")
         except Exception as e:
@@ -116,7 +146,6 @@ async def merge_docx_with_breaks(doc_entries, output_path):
 
     merged.save(output_path)
     print(f"[OK] Final merged DOCX saved: {output_path}")
-
 
 
 
