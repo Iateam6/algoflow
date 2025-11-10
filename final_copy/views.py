@@ -129,7 +129,7 @@ async def process_final_copy(request, docs, files, forms):
             # Step 5: Create a separator for forms
             print("[STEP 5] Creating separator page...")
             separator_pdf = os.path.join(temp_dir, "separator.pdf")
-            await create_blank_page_pdf(separator_pdf, text="--- Supporting Documents and Forms ---")
+            await create_blank_page_pdf(separator_pdf, text="--- Form Documents ---")
 
             # Step 6: Merge all PDFs safely
             print("[STEP 6] Merging all PDFs...")
@@ -162,7 +162,9 @@ async def process_final_copy(request, docs, files, forms):
 
             # Step 9: Return URLs
             pdf_url = request.build_absolute_uri(f"{settings.MEDIA_URL}generated/final_copy.pdf")
+            print("[SUCCESS] Final PDF URL:", pdf_url)
             docx_url = request.build_absolute_uri(f"{settings.MEDIA_URL}generated/final_copy.docx")
+            print("[SUCCESS] Final DOCX URL:", docx_url)
 
             print("[SUCCESS] Final outputs generated successfully")
             return JsonResponse({
