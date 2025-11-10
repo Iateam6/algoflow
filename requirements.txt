@@ -19,3 +19,4 @@ uvicorn
 docx2txt
 pdfminer.six
 docxcompose
+pycryptodome
