@@ -18,3 +18,4 @@ requests
 uvicorn
 docx2txt
 pdfminer.six
+docxcompose
