@@ -8,7 +8,7 @@ from .openai_client import get_openai_client
 
 logger = logging.getLogger(__name__)
 
-GENERATION_MODEL = "gpt-4.1"
+GENERATION_MODEL = "o3-mini"
 
 
 @dataclass(frozen=True)
