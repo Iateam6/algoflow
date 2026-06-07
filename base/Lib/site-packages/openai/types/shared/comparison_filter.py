@@ -9,10 +9,14 @@ __all__ = ["ComparisonFilter"]
 
 
 class ComparisonFilter(BaseModel):
+    """
+    A filter used to compare a specified attribute key to a given value using a defined comparison operation.
+    """
+
     key: str
     """The key to compare against the value."""
 
-    type: Literal["eq", "ne", "gt", "gte", "lt", "lte"]
+    type: Literal["eq", "ne", "gt", "gte", "lt", "lte", "in", "nin"]
     """
     Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`,
     `nin`.

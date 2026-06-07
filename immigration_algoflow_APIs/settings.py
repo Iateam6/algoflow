@@ -1,3 +1,4 @@
+import os
 import environ
 from pathlib import Path
 
@@ -8,7 +9,6 @@ env = environ.Env()
 env.read_env(BASE_DIR / '.env')
 
 OPENAI_API_KEY = env('OPENAI_API_KEY')
-API_KEY = env('API_KEY')
 
 SECURE_SSL_REDIRECT = False
 
@@ -22,13 +22,13 @@ SECRET_KEY = "django-insecure-0p+wz2#5h1bsxcb84+7b)i9)gp)+r1bx#)-b+8mr-2k6ip_(($
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = ['*']
 
-#CORS configuration
-CORS_ALLOWED_ORIGINS = [
-    "https://algoflow.visa26.com/",
-    "https://app.visa26.com",
-]
+# #CORS configuration
+# CORS_ALLOWED_ORIGINS = [
+#     "https://algoflow.visa26.com/",
+#     "https://app.visa26.com",
+# ]
 
 # Application definition
 

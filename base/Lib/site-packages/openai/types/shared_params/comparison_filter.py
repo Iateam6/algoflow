@@ -11,10 +11,14 @@ __all__ = ["ComparisonFilter"]
 
 
 class ComparisonFilter(TypedDict, total=False):
+    """
+    A filter used to compare a specified attribute key to a given value using a defined comparison operation.
+    """
+
     key: Required[str]
     """The key to compare against the value."""
 
-    type: Required[Literal["eq", "ne", "gt", "gte", "lt", "lte"]]
+    type: Required[Literal["eq", "ne", "gt", "gte", "lt", "lte", "in", "nin"]]
     """
     Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`,
     `nin`.

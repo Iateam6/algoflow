@@ -1,19 +1,37 @@
+import asyncio
 import logging
+from dataclasses import dataclass
 from datetime import datetime
-from agents import Agent , Runner ,WebSearchTool ,FileSearchTool ,ModelSettings
 
-async def initialize_agents(vector_store_id):
-    """
-    Initialize agents with the given vector store ID.
-    """
+from .openai_client import get_openai_client
+
+
+logger = logging.getLogger(__name__)
+
+GENERATION_MODEL = "gpt-4.1"
+
+
+@dataclass(frozen=True)
+class DocumentPrompt:
+    name: str
+    template: str
+
+
+def format_current_date() -> str:
+    return datetime.now().strftime("%B %d, %Y").replace(" 0", " ")
+
+
+def build_prompt_registry():
+    """Build the prompt registry for each L1a output document."""
     # Get today’s date in the desired format
-    current_date = datetime.now().strftime("%B %#d, %Y")
+    current_date = format_current_date()
+
 
     return {
-        "Petition Cover Letter": Agent(
+        "Petition Cover Letter": DocumentPrompt(
             name="Petition Cover Letter Agent",
-            instructions=(
-                f"""
+            template=(
+                rf"""
                 Today’s date is {current_date}.
                 You are tasked with generating a petition cover letter for an Application for Advance Parole / Travel Authorization (Form I-131).
 
@@ -81,20 +99,11 @@ async def initialize_agents(vector_store_id):
                 Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
                 """
             ),
-            model="gpt-4.1",
-            model_settings=ModelSettings(temperature=0.9),
-            tools=[
-                WebSearchTool(),
-                FileSearchTool(
-                    max_num_results=5,
-                    vector_store_ids=[vector_store_id],
-                ),
-            ],
         ),
-        "Exhibit List": Agent(
+        "Exhibit List": DocumentPrompt(
             name="Exhibit List Agent",
-            instructions=(
-                f"""
+            template=(
+                rf"""
                 Today’s date is {current_date}.
                 You are tasked with generating a petition cover letter for an Application for Advance Parole / Travel Authorization (Form I-131).
 
@@ -171,20 +180,12 @@ async def initialize_agents(vector_store_id):
                 Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
                 """
             ),
-            model="gpt-4.1",
-            model_settings=ModelSettings(temperature=0.9),
-            tools=[
-                WebSearchTool(),
-                FileSearchTool(
-                    max_num_results=5,
-                    vector_store_ids=[vector_store_id],
-                ),
-            ],
         ),
-        "Eligibility Memorandum": Agent(
-            name="Eligibility Memorandum Agent",
-            instructions=(
-                f"""
+        "Eligibility Memorandum": DocumentPrompt(
+            name="Eligibility Memorandum",
+            template=(
+                rf"""
+
                 Today’s date is {current_date}.
                 You are tasked with generating a petition cover letter for an Application for Advance Parole / Travel Authorization (Form I-131).
 
@@ -257,20 +258,11 @@ async def initialize_agents(vector_store_id):
                 Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
                 """
             ),
-            model="gpt-4.1",
-            model_settings=ModelSettings(temperature=0.9),
-            tools=[
-                WebSearchTool(),
-                FileSearchTool(
-                    max_num_results=5,
-                    vector_store_ids=[vector_store_id],
-                ),
-            ],
         ),
-        "Evidence-Organization Chart": Agent(
-            name="Evidence-Organization Chart Agent",
-            instructions=(
-                f"""
+        "Evidence-Organization Chart": DocumentPrompt(
+            name="Evidence-Organization Chart",
+            template=(
+                rf"""
                 Today’s date is {current_date}.
                 You are tasked with generating a petition cover letter for an Application for Advance Parole / Travel Authorization (Form I-131).
 
@@ -337,31 +329,183 @@ async def initialize_agents(vector_store_id):
                 Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
                 """
             ),
-            model="gpt-4.1",
-            model_settings=ModelSettings(temperature=0.9),
-            tools=[
-                WebSearchTool(),
-                FileSearchTool(
-                    max_num_results=5,
-                    vector_store_ids=[vector_store_id],
-                ),
-            ],
         ),
     }
 
-#Initialize agents with the given vector store ID function
-async def generate_document(file_type, agents):
-    """
-    Generate a single document using the corresponding agent.
-    
-    """
-    agent = agents.get(file_type)
-    if agent:
-        logging.info(f"Generating document: {file_type} using {agent.name}")
-        # Simulate the agent's task (replace this with actual agent execution logic)
-        result = await Runner.run(agent, file_type)  # Assuming `run()` is a synchronous method
-        print(f"Generated {file_type}: {result}")
-        return result
-    else:
-        logging.warning(f"No agent found for document type: {file_type}")
-        return None
+RETRIEVAL_HINTS = {
+    "Petition Cover Letter": [
+        "advance parole",
+        "travel authorization",
+        "Form I-131",
+        "Application for Travel Document",
+        "form-g-28",
+        "form-g-1145",
+        "form-i-94",
+        "form-i-797",
+        "passport",
+        "visa page",
+        "employer-letter",
+        "professional-certs",
+        "USCIS",
+    ],
+    "Exhibit List": [
+        "exhibit list",
+        "advance parole",
+        "travel authorization",
+        "form-i-129",
+        "form-g-28",
+        "form-g-1145",
+        "form-i-907",
+        "certified-lca",
+        "degree-evidence",
+        "employer-letter",
+        "form-i-94",
+        "form-w2",
+        "form-i-797",
+        "form-w2-1099",
+        "professional-certs",
+        "passport",
+    ],
+    "Eligibility Memorandum": [
+        "eligibility memorandum",
+        "advance parole",
+        "Form I-131",
+        "pending I-485",
+        "qualifying application",
+        "travel reason",
+        "humanitarian",
+        "employment",
+        "education",
+        "family emergency",
+        "form-i-94",
+        "form-i-797",
+        "passport",
+        "visa page",
+        "current immigration status",
+    ],
+    "Evidence-Organization Chart": [
+        "evidence organization chart",
+        "organization chart",
+        "advance parole",
+        "travel authorization",
+        "employer-letter",
+        "job description",
+        "department",
+        "reporting lines",
+        "employment verification",
+        "form-i-797",
+        "USCIS notice",
+    ],
+}
+
+
+def build_retrieval_query(file_type: str) -> str:
+    hints = RETRIEVAL_HINTS.get(file_type, [])
+    return " | ".join([file_type, *hints])
+
+
+def deduplicate_retrieved_context(retrieved_context) -> list:
+    deduplicated = []
+    seen_keys = set()
+
+    for document in retrieved_context:
+        metadata = getattr(document, "metadata", {}) or {}
+        key = (
+            str(metadata.get("file_hash", "")),
+            str(metadata.get("page_number", "")),
+            str(metadata.get("chunk_index", "")),
+        )
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        deduplicated.append(document)
+
+    return deduplicated
+
+
+def build_retrieved_case_record(retrieved_context) -> str:
+    sections = []
+    for index, document in enumerate(deduplicate_retrieved_context(retrieved_context), start=1):
+        metadata = getattr(document, "metadata", {}) or {}
+        sections.append(
+            "\n".join(
+                [
+                    f"### Retrieved Chunk {index}",
+                    f"- Source: {metadata.get('source_name', 'unknown')}",
+                    f"- Category: {metadata.get('source_category', 'unknown')}",
+                    f"- Page: {metadata.get('page_number', 'unknown')}",
+                    f"- Chunk: {metadata.get('chunk_index', 'unknown')}",
+                    f"- Extraction mode: {metadata.get('extraction_mode', 'unknown')}",
+                    document.page_content.strip(),
+                ]
+            ).strip()
+        )
+
+    if not sections:
+        return "No retrieved case record was available."
+
+    return "\n\n".join(sections)
+
+
+def summarise_source_manifest(source_manifest: list[dict]) -> str:
+    lines = []
+    for entry in source_manifest:
+        lines.append(
+            "\n".join(
+                [
+                    f"- Source name: {entry.get('original_filename', 'unknown')}",
+                    f"  Category: {entry.get('name', 'unknown')}",
+                    f"  File hash: {entry.get('file_hash', 'unknown')}",
+                    f"  Extension: {entry.get('extension', 'unknown')}",
+                    f"  MIME type: {entry.get('content_type', 'unknown')}",
+                    f"  Extraction mode: {entry.get('extraction_mode', 'unknown')}",
+                    f"  Pages: {entry.get('page_count', 'unknown')}",
+                ]
+            )
+        )
+
+    return "\n".join(lines) if lines else "- No source manifest available."
+
+
+def build_generation_prompt(file_type: str, retrieved_context, source_manifest: list[dict]) -> str:
+    prompt_registry = build_prompt_registry()
+    prompt = prompt_registry.get(file_type)
+    if not prompt:
+        raise ValueError(f"No prompt found for document type: {file_type}")
+
+    return "\n\n".join(
+        [ 
+            prompt.template.strip(),
+            "# Retrieved Case Record",
+            build_retrieved_case_record(retrieved_context),
+            "# Source Manifest",
+            summarise_source_manifest(source_manifest),
+            "# Additional Output Rules",
+            "Use only the retrieved case record and the source manifest.",
+            "If key facts are missing, leave the relevant placeholders blank.",
+            "Return only the final document enclosed in triple backticks.",
+        ]
+    ).strip()
+
+
+async def generate_document(file_type, retrieved_context, source_manifest):
+    prompt_text = build_generation_prompt(file_type, retrieved_context, source_manifest)
+    client = get_openai_client()
+    logger.info("Generating %s with %s retrieved chunks", file_type, len(retrieved_context))
+
+    response = await asyncio.to_thread(
+        client.responses.create,
+        model=GENERATION_MODEL,
+        input=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "input_text",
+                        "text": prompt_text,
+                    }
+                ],
+            }
+        ],
+    )
+    return (response.output_text or "").strip()

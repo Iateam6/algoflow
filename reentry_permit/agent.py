@@ -1,19 +1,36 @@
+import asyncio
 import logging
+from dataclasses import dataclass
 from datetime import datetime
-from agents import Agent , Runner ,WebSearchTool ,FileSearchTool ,ModelSettings
 
-async def initialize_agents(vector_store_id):
-    """
-    Initialize agents with the given vector store ID.
-    """
+from .openai_client import get_openai_client
+
+
+logger = logging.getLogger(__name__)
+
+GENERATION_MODEL = "gpt-4.1"
+
+
+@dataclass(frozen=True)
+class DocumentPrompt:
+    name: str
+    template: str
+
+
+def format_current_date() -> str:
+    return datetime.now().strftime("%B %d, %Y").replace(" 0", " ")
+
+
+def build_prompt_registry():
+    """Build the prompt registry for each L1a output document."""
     # Get today’s date in the desired format
-    current_date = datetime.now().strftime("%B %#d, %Y")
+    current_date = format_current_date()
 
     return {
-        "Petition Cover Letter": Agent(
-            name="Petition Cover Letter Agent",
-            instructions=(
-                f"""
+        "Petition Cover Letter": DocumentPrompt(
+            name="Petition Cover Letter",
+            template=(
+                rf"""
                 Today’s date is {current_date}.
                 You are tasked with generating a cover letter in support of a Reentry Permit (Form I-131) application under Consular Processing.
 
@@ -91,21 +108,12 @@ async def initialize_agents(vector_store_id):
                 Step 8.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
                 Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
                 """
-            ),
-            model="gpt-4.1",
-            model_settings=ModelSettings(temperature=0.9),
-            tools=[
-                WebSearchTool(),
-                FileSearchTool(
-                    max_num_results=50,
-                    vector_store_ids=[vector_store_id],
-                ),
-            ],
+            ),            
         ),
-         "Support Letter": Agent(
-            name="Support Letter Agent",
-            instructions=(
-                f"""
+         "Support Letter": DocumentPrompt(
+            name="Support Letter",
+            template=(
+                rf"""
                 Today’s date is {current_date}.
                 You are tasked with generating a support letter in support of a Reentry Permit (Form I-131) application under Consular Processing.
 
@@ -194,20 +202,11 @@ async def initialize_agents(vector_store_id):
                 Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
                 """
             ),
-            model="gpt-4.1",
-            model_settings=ModelSettings(temperature=0.9),
-            tools=[
-                WebSearchTool(),
-                FileSearchTool(
-                    max_num_results=50,
-                    vector_store_ids=[vector_store_id],
-                ),
-            ],
         ),
-        "Recommendation Letter": Agent(
-            name="Recommendation Letter Agent",
-            instructions=(
-                f"""
+        "Recommendation Letter": DocumentPrompt(
+            name="Recommendation Letter",
+            template=(
+                rf"""
                 Today’s date is {current_date}.
                 You are tasked with generating a Recommendation Letter in support of a Reentry Permit (Form I-131) application under Consular Processing.
 
@@ -270,20 +269,11 @@ async def initialize_agents(vector_store_id):
                 Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
                 """
             ),
-            model="gpt-4.1",
-            model_settings=ModelSettings(temperature=0.9),
-            tools=[
-                WebSearchTool(),
-                FileSearchTool(
-                    max_num_results=50,
-                    vector_store_ids=[vector_store_id],
-                ),
-            ],
         ),
-        "Exhibit List": Agent(
-            name="Exhibit List Agent",
-            instructions=(
-                f"""
+        "Exhibit List": DocumentPrompt(
+            name="Exhibit List",
+            template=(
+                rf"""
                 Today’s date is {current_date}.
                 You are tasked with generating a Exhibit List in support of a Reentry Permit (Form I-131) application under Consular Processing.
 
@@ -361,20 +351,11 @@ async def initialize_agents(vector_store_id):
                 Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
                 """
             ),
-            model="gpt-4.1",
-            model_settings=ModelSettings(temperature=0.9),
-            tools=[
-                WebSearchTool(),
-                FileSearchTool(
-                    max_num_results=50,
-                    vector_store_ids=[vector_store_id],
-                ),
-            ],
         ),
-        "RFE Response Brief": Agent(
-            name="RFE Response Brief Agent",
-            instructions=(
-                f"""
+        "RFE Response Brief": DocumentPrompt(
+            name="RFE Response Brief",
+            template=(
+                rf"""
                 Today’s date is {current_date}.
                 You are tasked with generating a RFE Response Brief in support of a Reentry Permit (Form I-131) application under Consular Processing.
 
@@ -477,20 +458,11 @@ async def initialize_agents(vector_store_id):
                 Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
                 """
             ),
-            model="gpt-4.1",
-            model_settings=ModelSettings(temperature=0.9),
-            tools=[
-                WebSearchTool(),
-                FileSearchTool(
-                    max_num_results=50,
-                    vector_store_ids=[vector_store_id],
-                ),
-            ],
         ),
-        "Demand Letter": Agent(
-            name="Demand Letter Agent",
-            instructions=(
-                    f"""
+        "Demand Letter": DocumentPrompt(
+            name="Demand Letter",
+            template=(
+                rf"""
                     Today’s date is {current_date}.  
                     You are tasked with generating a Demand Letter in support of a Reentry Permit (Form I-131) application under Consular Processing.
 
@@ -601,20 +573,11 @@ async def initialize_agents(vector_store_id):
                     """
 
             ),
-            model="gpt-4.1",
-            model_settings=ModelSettings(temperature=0.9),
-            tools=[
-                WebSearchTool(),
-                FileSearchTool(
-                    max_num_results=50,
-                    vector_store_ids=[vector_store_id],
-                ),
-            ],
         ),
-        "Assessment Report": Agent(
-            name="Assessment Report Agent",
-            instructions=(
-                f"""
+        "Assessment Report": DocumentPrompt(
+            name="Assessment Report",
+            template=(
+                rf"""
                 Today’s date is {current_date}.
                 You are tasked with generating a Assessment Report in support of a Reentry Permit (Form I-131) application under Consular Processing.
 
@@ -700,20 +663,11 @@ async def initialize_agents(vector_store_id):
                 Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
                 """
             ),
-            model="gpt-4.1",
-            model_settings=ModelSettings(temperature=0.9),
-            tools=[
-                WebSearchTool(),
-                FileSearchTool(
-                    max_num_results=50,
-                    vector_store_ids=[vector_store_id],
-                ),
-            ],
         ),
-        "Eligibility Memorandum": Agent(
-            name="Eligibility Memorandum Agent",
-            instructions=(
-                f"""
+        "Eligibility Memorandum": DocumentPrompt(
+            name="Eligibility Memorandum",
+            template=(
+                rf"""
                 Today’s date is {current_date}.
                 You are tasked with generating a Eligibility Memorandum in support of a Reentry Permit (Form I-131) application under Consular Processing.
 
@@ -799,20 +753,11 @@ async def initialize_agents(vector_store_id):
                 Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
                 """
             ),
-            model="gpt-4.1",
-            model_settings=ModelSettings(temperature=0.9),
-            tools=[
-                WebSearchTool(),
-                FileSearchTool(
-                    max_num_results=50,
-                    vector_store_ids=[vector_store_id],
-                ),
-            ],
         ),
-        "Visa Application Summary Report": Agent(
-            name="Visa Application Summary Report Agent",
-            instructions=(
-                f"""
+        "Visa Application Summary Report": DocumentPrompt(
+            name="Visa Application Summary Report",
+            template=(
+                rf"""
                 Today’s date is {current_date}.
                 You are tasked with generating a Visa application in support of a Reentry Permit (Form I-131) application under Consular Processing.
 
@@ -882,31 +827,252 @@ async def initialize_agents(vector_store_id):
                 Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
                 """
             ),
-            model="gpt-4.1",
-            model_settings=ModelSettings(temperature=0.9),
-            tools=[
-                WebSearchTool(),
-                FileSearchTool(
-                    max_num_results=50,
-                    vector_store_ids=[vector_store_id],
-                ),
-            ],
         ),
     }
 
-#Initialize agents with the given vector store ID function
-async def generate_document(file_type, agents):
-    """
-    Generate a single document using the corresponding agent.
+RETRIEVAL_HINTS = {
+    "Petition Cover Letter": [
+        "reentry permit",
+        "form-i-131",
+        "Form I-131",
+        "Application for Travel Document",
+        "form-g-1145",
+        "form-g-28",
+        "permanent-resident-card",
+        "green card",
+        "Form I-551",
+        "passport biographic page",
+        "return-ticket-reservation",
+        "proof of ties",
+        "USCIS filing",
+    ],
+    "Support Letter": [
+        "reentry permit support letter",
+        "lawful permanent resident",
+        "continuous residence",
+        "non-abandonment",
+        "explanation-for-extended-travel",
+        "purpose of travel",
+        "intended absence",
+        "employment",
+        "family",
+        "property",
+        "attorney",
+        "representative",
+    ],
+    "Recommendation Letter": [
+        "recommendation letter",
+        "reentry permit",
+        "lawful permanent resident",
+        "purpose of travel",
+        "intended absence",
+        "continuous residence",
+        "non-abandonment",
+        "employment ties",
+        "family ties",
+        "property ties",
+        "supporting evidence",
+    ],
+    "Exhibit List": [
+        "exhibit list",
+        "form-i-131",
+        "Form I-131",
+        "form-g-1145",
+        "form-g-28",
+        "permanent-resident-card",
+        "Form I-551",
+        "passport",
+        "biographic page",
+        "visa pages",
+        "explanation-for-extended-travel",
+        "return-ticket-reservation",
+        "proof of ties",
+    ],
+    "RFE Response Brief": [
+        "request for evidence response",
+        "RFE",
+        "USCIS",
+        "reentry permit",
+        "Form I-131",
+        "lawful permanent resident",
+        "continuous residence",
+        "non-abandonment",
+        "purpose of travel",
+        "intended absence",
+        "permanent resident card",
+        "proof of ties",
+    ],
+    "Demand Letter": [
+        "demand letter",
+        "pending adjudication",
+        "adjudication delay",
+        "USCIS",
+        "reentry permit",
+        "Form I-131",
+        "filing receipt",
+        "form-g-28",
+        "attorney",
+        "representative",
+        "final decision",
+    ],
+    "Assessment Report": [
+        "assessment report",
+        "reentry permit",
+        "Form I-131",
+        "lawful permanent resident",
+        "continuous residence",
+        "non-abandonment",
+        "purpose of travel",
+        "intended absence",
+        "permanent resident card",
+        "forms and exhibits",
+        "proof of ties",
+        "USCIS",
+    ],
+    "Eligibility Memorandum": [
+        "eligibility memorandum",
+        "reentry permit",
+        "Form I-131",
+        "Application for Travel Document",
+        "lawful permanent resident",
+        "green card",
+        "Form I-551",
+        "continuous residence",
+        "non-abandonment",
+        "explanation-for-extended-travel",
+        "purpose of travel",
+        "intended absence",
+        "employment",
+        "family",
+        "property",
+    ],
+    "Visa Application Summary Report": [
+        "visa application summary report",
+        "reentry permit",
+        "form-i-131",
+        "Form I-131",
+        "Application for Travel Document",
+        "form-g-1145",
+        "form-g-28",
+        "permanent-resident-card",
+        "passport",
+        "biographic page",
+        "visa pages",
+        "return-ticket-reservation",
+        "proof of ties",
+        "purpose of travel",
+        "intended absence",
+    ],
+}
 
-    """
-    agent = agents.get(file_type)
-    if agent:
-        logging.info(f"Generating document: {file_type} using {agent.name}")
-        # Simulate the agent's task (replace this with actual agent execution logic)
-        result = await Runner.run(agent, file_type)  # Assuming `run()` is a synchronous method
-        print(f"Generated {file_type}: {result}")
-        return result
-    else:
-        logging.warning(f"No agent found for document type: {file_type}")
-        return None
+
+def build_retrieval_query(file_type: str) -> str:
+    hints = RETRIEVAL_HINTS.get(file_type, [])
+    return " | ".join([file_type, *hints])
+
+
+def deduplicate_retrieved_context(retrieved_context) -> list:
+    deduplicated = []
+    seen_keys = set()
+
+    for document in retrieved_context:
+        metadata = getattr(document, "metadata", {}) or {}
+        key = (
+            str(metadata.get("file_hash", "")),
+            str(metadata.get("page_number", "")),
+            str(metadata.get("chunk_index", "")),
+        )
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        deduplicated.append(document)
+
+    return deduplicated
+
+
+def build_retrieved_case_record(retrieved_context) -> str:
+    sections = []
+    for index, document in enumerate(deduplicate_retrieved_context(retrieved_context), start=1):
+        metadata = getattr(document, "metadata", {}) or {}
+        sections.append(
+            "\n".join(
+                [
+                    f"### Retrieved Chunk {index}",
+                    f"- Source: {metadata.get('source_name', 'unknown')}",
+                    f"- Category: {metadata.get('source_category', 'unknown')}",
+                    f"- Page: {metadata.get('page_number', 'unknown')}",
+                    f"- Chunk: {metadata.get('chunk_index', 'unknown')}",
+                    f"- Extraction mode: {metadata.get('extraction_mode', 'unknown')}",
+                    document.page_content.strip(),
+                ]
+            ).strip()
+        )
+
+    if not sections:
+        return "No retrieved case record was available."
+
+    return "\n\n".join(sections)
+
+
+def summarise_source_manifest(source_manifest: list[dict]) -> str:
+    lines = []
+    for entry in source_manifest:
+        lines.append(
+            "\n".join(
+                [
+                    f"- Source name: {entry.get('original_filename', 'unknown')}",
+                    f"  Category: {entry.get('name', 'unknown')}",
+                    f"  File hash: {entry.get('file_hash', 'unknown')}",
+                    f"  Extension: {entry.get('extension', 'unknown')}",
+                    f"  MIME type: {entry.get('content_type', 'unknown')}",
+                    f"  Extraction mode: {entry.get('extraction_mode', 'unknown')}",
+                    f"  Pages: {entry.get('page_count', 'unknown')}",
+                ]
+            )
+        )
+
+    return "\n".join(lines) if lines else "- No source manifest available."
+
+
+def build_generation_prompt(file_type: str, retrieved_context, source_manifest: list[dict]) -> str:
+    prompt_registry = build_prompt_registry()
+    prompt = prompt_registry.get(file_type)
+    if not prompt:
+        raise ValueError(f"No prompt found for document type: {file_type}")
+
+    return "\n\n".join(
+        [ 
+            prompt.template.strip(),
+            "# Retrieved Case Record",
+            build_retrieved_case_record(retrieved_context),
+            "# Source Manifest",
+            summarise_source_manifest(source_manifest),
+            "# Additional Output Rules",
+            "Use only the retrieved case record and the source manifest.",
+            "If key facts are missing, leave the relevant placeholders blank.",
+            "Return only the final document enclosed in triple backticks.",
+        ]
+    ).strip()
+
+
+async def generate_document(file_type, retrieved_context, source_manifest):
+    prompt_text = build_generation_prompt(file_type, retrieved_context, source_manifest)
+    client = get_openai_client()
+    logger.info("Generating %s with %s retrieved chunks", file_type, len(retrieved_context))
+
+    response = await asyncio.to_thread(
+        client.responses.create,
+        model=GENERATION_MODEL,
+        input=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "input_text",
+                        "text": prompt_text,
+                    }
+                ],
+            }
+        ],
+    )
+    return (response.output_text or "").strip()
