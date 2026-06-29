@@ -525,7 +525,12 @@ def build_generation_prompt(file_type: str, retrieved_context, source_manifest: 
             "# Source Manifest",
             summarise_source_manifest(source_manifest),
             "# Additional Output Rules",
-            "Use only the retrieved case record and the source manifest.",
+            "Treat the template as a structural guide only; do not copy it verbatim.",
+            "Act like a lawyer: analyze the retrieved case record and the source manifest, then draft a document grounded in those materials.",
+            "Use the retrieved case record as the primary source of factual support and the source manifest as supporting evidence.",
+            "When a template field or placeholder is not directly available, look for equivalent or related evidence in the retrieved case record/source manifest and use that to fill the section.",
+            "For example, if the template asks for 'petitioner' or 'employer' and the case record uses a different but equivalent term, use the correct party from the evidence.",
+            "Fill in every relevant section with facts supported by the retrieved case record or source manifest; if evidence is missing, leave the relevant content blank or mark it as [Not provided] rather than inventing facts.",
             "If key facts are missing, leave the relevant placeholders blank.",
             "Return only the final document enclosed in triple backticks.",
         ]

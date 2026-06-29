@@ -43,7 +43,7 @@ class RAGConfig:
     retrieval_k: int = 10
     retrieval_fetch_k: int = 30
     search_type: str = "mmr"
-    pipeline_version: str = "l1a-rag-v1"
+    pipeline_version: str = "aap-rag-v1"
 
 
 @dataclass
@@ -83,7 +83,7 @@ class CorpusBundle:
 
 
 def get_default_config() -> RAGConfig:
-    cache_root = os.path.join(settings.MEDIA_ROOT, "l1a_rag")
+    cache_root = os.path.join(settings.MEDIA_ROOT, "aap_rag")
     return RAGConfig(cache_root=cache_root)
 
 
@@ -227,7 +227,7 @@ async def get_or_build_corpus(
     cache_paths = get_cache_paths(corpus_hash, config)
     embeddings = ensure_embedding_environment(config)
 
-    logger.info("Preparing L1a corpus %s", corpus_hash)
+    logger.info("Preparing AAP corpus %s", corpus_hash)
 
     cache_hit = os.path.isdir(cache_paths["vectorstore_dir"]) and os.path.exists(cache_paths["manifest_path"])
     if cache_hit:

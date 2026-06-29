@@ -11,6 +11,7 @@ from django.conf import settings
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from asgiref.sync import async_to_sync
+from immigration_algoflow_APIs.media_cleanup import delete_file_if_exists
 from .utils import convert_to_pdf, merge_pdfs, create_blank_page_pdf, prepend_cover_and_merge
 
 
@@ -157,6 +158,8 @@ async def process_final_copy(request, docs, files, forms):
             os.makedirs(media_dir, exist_ok=True)
             final_pdf_path = os.path.join(media_dir, "final_copy.pdf")
             final_docx_path = os.path.join(media_dir, "final_copy.docx")
+            delete_file_if_exists(final_pdf_path)
+            delete_file_if_exists(final_docx_path)
             shutil.move(merged_pdf, final_pdf_path)
             shutil.move(docx_path, final_docx_path)
 

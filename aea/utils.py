@@ -9,6 +9,8 @@ from bs4 import BeautifulSoup
 from django.conf import settings
 from docx import Document
 
+from immigration_algoflow_APIs.media_cleanup import clean_media_files_for_generation, delete_file_if_exists
+
 from .agent import build_retrieval_query, generate_document
 from .rag import get_or_build_corpus
 
@@ -33,6 +35,7 @@ async def convert_markdown_to_docx(md_text: str, output_path: str) -> str | None
         generated_dir = os.path.join(settings.MEDIA_ROOT, "generated")
         os.makedirs(generated_dir, exist_ok=True)
         full_output_path = os.path.join(generated_dir, output_path)
+        delete_file_if_exists(full_output_path)
 
         html = markdown.markdown(md_text, extensions=["extra"])
         soup = BeautifulSoup(html, "html.parser")
@@ -99,6 +102,8 @@ async def async_handle_doc_generation(
     total_start = time.perf_counter()
 
     try:
+        clean_media_files_for_generation()
+
         ingest_start = time.perf_counter()
         corpus_bundle = await get_or_build_corpus(file_manifests)
         logger.info(

@@ -13,16 +13,15 @@ from django.conf import settings
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from immigration_algoflow_APIs.file_inputs import (
+    INVALID_FILE_URLS_ERROR,
+    build_url_source_entries,
+)
+
 from .utils import handle_doc_generation
 
 
 logger = logging.getLogger(__name__)
-
-ALLOWED_NAMES = {
-    "form-i-131", "form-g-1145", "form-g-28", 
-    "permanent-resident-card", "explanation-for-extended-travel", 
-    "passport", "return-ticket-reservation"
-    }
 
 def index(request):
     return HttpResponse('Welcome to Reentry Permit (I-131) API!')
@@ -84,7 +83,7 @@ def build_download_manifest(
 @csrf_exempt
 def generate_doc(request):
     """
-    Handle JSON uploads, download each allowed file URL to a temp directory,
+    Handle JSON URL uploads, download each file URL to a temp directory,
     generate a single document based on one option, and return its download URL.
     """
     if request.method != "POST":
@@ -93,30 +92,16 @@ def generate_doc(request):
     try:
         payload = json.loads(request.body)
         options = payload.get("options", "")
-        files = payload.get("files", [])
+        files = payload.get("files")
     except Exception as exc:
         return HttpResponseBadRequest(f"Invalid JSON data: {exc}")
 
-    for file_entry in files:
-        if isinstance(file_entry, dict) and file_entry.get("name") in ALLOWED_NAMES and "error" in file_entry:
-            return JsonResponse(
-                {
-                    "download_url": None,
-                    "error message": "No allowed files provided please provided the allowed files and try againg",
-                }
-            )
-
-    filtered = [
-        file_entry
-        for file_entry in files
-        if isinstance(file_entry, dict) and file_entry.get("name") in ALLOWED_NAMES and file_entry.get("url")
-    ]
-
+    filtered = build_url_source_entries(files)
     if not filtered:
         return JsonResponse(
             {
                 "download_url": None,
-                "error message": "No allowed files provided please provided the allowed files and try againg",
+                "error message": INVALID_FILE_URLS_ERROR,
             }
         )
 
@@ -129,7 +114,7 @@ def generate_doc(request):
             response.raise_for_status()
 
             original_filename = build_download_filename(response, entry["url"])
-            local_filename = f"{entry['name']}_{index}{os.path.splitext(original_filename)[1]}"
+            local_filename = f"source_{index}{os.path.splitext(original_filename)[1]}"
             local_path = os.path.join(temp_dir, local_filename)
 
             with open(local_path, "wb") as temp_file:
@@ -144,7 +129,7 @@ def generate_doc(request):
             )
             file_manifests.append(file_manifest)
 
-        logger.info("Downloaded %s files for L1a generation", len(file_manifests))
+        logger.info("Downloaded %s files for reentry permit generation", len(file_manifests))
 
         generated_paths = handle_doc_generation(file_manifests, [options])
         if not generated_paths or len(generated_paths) != 1:
@@ -174,7 +159,7 @@ def generate_doc(request):
             }
         )
     except requests.RequestException:
-        logger.exception("Failed to download one or more L1a source documents.")
+        logger.exception("Failed to download one or more reentry permit source documents.")
         return JsonResponse(
             {
                 "download_url": None,
@@ -182,7 +167,7 @@ def generate_doc(request):
             }
         )
     except Exception:
-        logger.exception("Unexpected error while generating an L1a document.")
+        logger.exception("Unexpected error while generating an reentry permit document.")
         return JsonResponse(
             {
                 "download_url": None,
@@ -193,4 +178,4 @@ def generate_doc(request):
         try:
             shutil.rmtree(temp_dir)
         except Exception:
-            logger.warning("Failed to clean temporary L1a directory %s", temp_dir)
+            logger.warning("Failed to clean temporary reentry permit directory %s", temp_dir)
