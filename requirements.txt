@@ -30,3 +30,13 @@ uvicorn
 gunicorn
 docxcompose
 legacy-cgi
+# Pinned to avoid Celery/kombu/redis RESP3/RESP2 compatibility issues that can crash
+# workers at startup (e.g., during mingle with Redis brokers).
+celery==5.3.6
+kombu==5.3.7
+redis[hiredis]==4.6.0
+boto3
+rank-bm25
+PyJWT[crypto]
+supervisor
+python-magic

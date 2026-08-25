@@ -1,0 +1,247 @@
+{
+  "corpus_hash": "e73e56c017d0db621c092e8b570ec808687093e240338744c5b620a7c654ff11",
+  "pipeline_version": "eb-1a-a-rag-v1",
+  "created_at": "2026-08-25T08:29:33.770224Z",
+  "cache_hit": false,
+  "chunk_count": 31,
+  "file_hashes": [
+    "2128dd9361146c336f0b341dc216dcc4d4c18a3cbc8355d2ef2d55c15bd9a9f8",
+    "289ea135069de564a48361462e194aee3d12bb6999320e5d1cebdf4cc2532261",
+    "3dca6072ef95e7ac5551bfda6aa25afe5d2cc9de3d88c1a3bd8c4fb0ed9fe1ae",
+    "5bdd0b547f2cb987a19c9cb84a8289518272047625c54d32fae59d4beda86e75",
+    "5c7efd239b0e9f0ded58be29f52b4a5c7fbfa29b27b4b03c28852bfdc2a65c56",
+    "5e53578ad3fa3be5a8b152c02e74dbf4fb108a17f4d1134bcb8f9bc25f8f9ff4",
+    "65977917d036d6958036cce50df80ad2ecee8cf99631ef459a29a8802dbed90d",
+    "6b2335c4bf93067ed9929f6759a8ead250abbfd4f87a1e243f1eca2dcd3b6504",
+    "7fab888f42222891b2aeb1a8e365e0ae81aab897f19ddc84879f20342c47dac7",
+    "8583b6e1b4cb65240ea826160cd9fd9c09f7c8beef8fe29dee13c6a1873ea508",
+    "dbf63e407e334c2adcf582901cd519aaded465a625a501ba1ac7eaba790079db",
+    "fbbdf8d978c1e7d786c14b1eb7d44c351d76a5e7ca65806910468ca8bfb052b0"
+  ],
+  "processed_sources": [
+    {
+      "name": "source-1",
+      "original_filename": "Passport Biographical (Photo) Page.pdf",
+      "url": "https://visa26.s3.us-west-1.amazonaws.com/cases/36358/file_6a7c5752639c6.pdf?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAQL62SKTN6WWYB35K%2F20260825%2Fus-west-1%2Fs3%2Faws4_request&X-Amz-Date=20260825T082327Z&X-Amz-SignedHeaders=host&X-Amz-Expires=82800&X-Amz-Signature=e7ce73ff4f3af65064ecf4148a76fad57bd25f5953e2698ca2e80680915b252f",
+      "content_type": "application/pdf",
+      "extension": ".pdf",
+      "local_path": "C:\\Users\\USER\\AppData\\Local\\Temp\\case-job-042a9556-79e5-43e7-82dc-6fc1bc2412a4-6htspyj5\\source_1.pdf",
+      "file_hash": "289ea135069de564a48361462e194aee3d12bb6999320e5d1cebdf4cc2532261",
+      "latex_path": "D:\\PROJECTS\\USI\\algoflow\\media\\eb_1a_a_rag\\public\\36358\\e73e56c017d0db621c092e8b570ec808687093e240338744c5b620a7c654ff11\\latex\\289ea135069de564a48361462e194aee3d12bb6999320e5d1cebdf4cc2532261.tex",
+      "page_count": 1,
+      "extraction_mode": "native_text",
+      "page_entries": [
+        {
+          "page_number": 1,
+          "extraction_mode": "native_text"
+        }
+      ]
+    },
+    {
+      "name": "source-2",
+      "original_filename": "Visa Pages (current and previous).pdf",
+      "url": "https://visa26.s3.us-west-1.amazonaws.com/cases/36358/file_6a7c578d3d30b.pdf?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAQL62SKTN6WWYB35K%2F20260825%2Fus-west-1%2Fs3%2Faws4_request&X-Amz-Date=20260825T082327Z&X-Amz-SignedHeaders=host&X-Amz-Expires=82800&X-Amz-Signature=22991cb22d3f9bc706359ca0218e1332b1cb1be0d70446446506bd890a678971",
+      "content_type": "application/pdf",
+      "extension": ".pdf",
+      "local_path": "C:\\Users\\USER\\AppData\\Local\\Temp\\case-job-042a9556-79e5-43e7-82dc-6fc1bc2412a4-6htspyj5\\source_2.pdf",
+      "file_hash": "5e53578ad3fa3be5a8b152c02e74dbf4fb108a17f4d1134bcb8f9bc25f8f9ff4",
+      "latex_path": "D:\\PROJECTS\\USI\\algoflow\\media\\eb_1a_a_rag\\public\\36358\\e73e56c017d0db621c092e8b570ec808687093e240338744c5b620a7c654ff11\\latex\\5e53578ad3fa3be5a8b152c02e74dbf4fb108a17f4d1134bcb8f9bc25f8f9ff4.tex",
+      "page_count": 1,
+      "extraction_mode": "native_text",
+      "page_entries": [
+        {
+          "page_number": 1,
+          "extraction_mode": "native_text"
+        }
+      ]
+    },
+    {
+      "name": "source-3",
+      "original_filename": "I-797 (Current and Previous).pdf",
+      "url": "https://visa26.s3.us-west-1.amazonaws.com/cases/36358/file_6a7c57b1f3373.pdf?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAQL62SKTN6WWYB35K%2F20260825%2Fus-west-1%2Fs3%2Faws4_request&X-Amz-Date=20260825T082327Z&X-Amz-SignedHeaders=host&X-Amz-Expires=82800&X-Amz-Signature=34915fbdc156203c028346338d740e88e5a8dd3f678a95d54329535b0c3687f8",
+      "content_type": "application/pdf",
+      "extension": ".pdf",
+      "local_path": "C:\\Users\\USER\\AppData\\Local\\Temp\\case-job-042a9556-79e5-43e7-82dc-6fc1bc2412a4-6htspyj5\\source_3.pdf",
+      "file_hash": "5c7efd239b0e9f0ded58be29f52b4a5c7fbfa29b27b4b03c28852bfdc2a65c56",
+      "latex_path": "D:\\PROJECTS\\USI\\algoflow\\media\\eb_1a_a_rag\\public\\36358\\e73e56c017d0db621c092e8b570ec808687093e240338744c5b620a7c654ff11\\latex\\5c7efd239b0e9f0ded58be29f52b4a5c7fbfa29b27b4b03c28852bfdc2a65c56.tex",
+      "page_count": 2,
+      "extraction_mode": "native_text",
+      "page_entries": [
+        {
+          "page_number": 1,
+          "extraction_mode": "native_text"
+        },
+        {
+          "page_number": 2,
+          "extraction_mode": "native_text"
+        }
+      ]
+    },
+    {
+      "name": "source-4",
+      "original_filename": "Departure Record).pdf",
+      "url": "https://visa26.s3.us-west-1.amazonaws.com/cases/36358/file_6a7c57f162055.pdf?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAQL62SKTN6WWYB35K%2F20260825%2Fus-west-1%2Fs3%2Faws4_request&X-Amz-Date=20260825T082327Z&X-Amz-SignedHeaders=host&X-Amz-Expires=82800&X-Amz-Signature=b3e5f588449c6fad77681bcc4f38d3214fb9bfe21be16070b26831800c6dafec",
+      "content_type": "application/pdf",
+      "extension": ".pdf",
+      "local_path": "C:\\Users\\USER\\AppData\\Local\\Temp\\case-job-042a9556-79e5-43e7-82dc-6fc1bc2412a4-6htspyj5\\source_4.pdf",
+      "file_hash": "fbbdf8d978c1e7d786c14b1eb7d44c351d76a5e7ca65806910468ca8bfb052b0",
+      "latex_path": "D:\\PROJECTS\\USI\\algoflow\\media\\eb_1a_a_rag\\public\\36358\\e73e56c017d0db621c092e8b570ec808687093e240338744c5b620a7c654ff11\\latex\\fbbdf8d978c1e7d786c14b1eb7d44c351d76a5e7ca65806910468ca8bfb052b0.tex",
+      "page_count": 1,
+      "extraction_mode": "native_text",
+      "page_entries": [
+        {
+          "page_number": 1,
+          "extraction_mode": "native_text"
+        }
+      ]
+    },
+    {
+      "name": "source-5",
+      "original_filename": "Travel History.pdf",
+      "url": "https://visa26.s3.us-west-1.amazonaws.com/cases/36358/file_6a82ed4997af0.pdf?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAQL62SKTN6WWYB35K%2F20260825%2Fus-west-1%2Fs3%2Faws4_request&X-Amz-Date=20260825T082327Z&X-Amz-SignedHeaders=host&X-Amz-Expires=82800&X-Amz-Signature=309ebf116228c14931b492f9f30c6fdc3d9e2dbc08e86b23cc94f250b5cffc8c",
+      "content_type": "application/pdf",
+      "extension": ".pdf",
+      "local_path": "C:\\Users\\USER\\AppData\\Local\\Temp\\case-job-042a9556-79e5-43e7-82dc-6fc1bc2412a4-6htspyj5\\source_5.pdf",
+      "file_hash": "8583b6e1b4cb65240ea826160cd9fd9c09f7c8beef8fe29dee13c6a1873ea508",
+      "latex_path": "D:\\PROJECTS\\USI\\algoflow\\media\\eb_1a_a_rag\\public\\36358\\e73e56c017d0db621c092e8b570ec808687093e240338744c5b620a7c654ff11\\latex\\8583b6e1b4cb65240ea826160cd9fd9c09f7c8beef8fe29dee13c6a1873ea508.tex",
+      "page_count": 2,
+      "extraction_mode": "hybrid",
+      "page_entries": [
+        {
+          "page_number": 1,
+          "extraction_mode": "native_text"
+        },
+        {
+          "page_number": 2,
+          "extraction_mode": "vision_ocr"
+        }
+      ]
+    },
+    {
+      "name": "source-6",
+      "original_filename": "Resume or Curriculum Vitae (CV).pdf",
+      "url": "https://visa26.s3.us-west-1.amazonaws.com/cases/36358/file_6a7c583e80f3c.pdf?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAQL62SKTN6WWYB35K%2F20260825%2Fus-west-1%2Fs3%2Faws4_request&X-Amz-Date=20260825T082327Z&X-Amz-SignedHeaders=host&X-Amz-Expires=82800&X-Amz-Signature=aceea0527a11500a014f597e64aa7109f663223eb9a5b56f8ec1d1f36d8a6b8d",
+      "content_type": "application/pdf",
+      "extension": ".pdf",
+      "local_path": "C:\\Users\\USER\\AppData\\Local\\Temp\\case-job-042a9556-79e5-43e7-82dc-6fc1bc2412a4-6htspyj5\\source_6.pdf",
+      "file_hash": "2128dd9361146c336f0b341dc216dcc4d4c18a3cbc8355d2ef2d55c15bd9a9f8",
+      "latex_path": "D:\\PROJECTS\\USI\\algoflow\\media\\eb_1a_a_rag\\public\\36358\\e73e56c017d0db621c092e8b570ec808687093e240338744c5b620a7c654ff11\\latex\\2128dd9361146c336f0b341dc216dcc4d4c18a3cbc8355d2ef2d55c15bd9a9f8.tex",
+      "page_count": 1,
+      "extraction_mode": "native_text",
+      "page_entries": [
+        {
+          "page_number": 1,
+          "extraction_mode": "native_text"
+        }
+      ]
+    },
+    {
+      "name": "source-7",
+      "original_filename": "[EDUCATIONAL CREDENTIALS] Diploma.pdf",
+      "url": "https://visa26.s3.us-west-1.amazonaws.com/cases/36358/file_6a7c586837a64.pdf?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAQL62SKTN6WWYB35K%2F20260825%2Fus-west-1%2Fs3%2Faws4_request&X-Amz-Date=20260825T082327Z&X-Amz-SignedHeaders=host&X-Amz-Expires=82800&X-Amz-Signature=26d052d899c9c06492f0fe966c6475845f06bd01cfac87a605653e05a909331c",
+      "content_type": "application/pdf",
+      "extension": ".pdf",
+      "local_path": "C:\\Users\\USER\\AppData\\Local\\Temp\\case-job-042a9556-79e5-43e7-82dc-6fc1bc2412a4-6htspyj5\\source_7.pdf",
+      "file_hash": "dbf63e407e334c2adcf582901cd519aaded465a625a501ba1ac7eaba790079db",
+      "latex_path": "D:\\PROJECTS\\USI\\algoflow\\media\\eb_1a_a_rag\\public\\36358\\e73e56c017d0db621c092e8b570ec808687093e240338744c5b620a7c654ff11\\latex\\dbf63e407e334c2adcf582901cd519aaded465a625a501ba1ac7eaba790079db.tex",
+      "page_count": 1,
+      "extraction_mode": "native_text",
+      "page_entries": [
+        {
+          "page_number": 1,
+          "extraction_mode": "native_text"
+        }
+      ]
+    },
+    {
+      "name": "source-8",
+      "original_filename": "[EDUCATIONAL CREDENTIALS] Transcript.pdf",
+      "url": "https://visa26.s3.us-west-1.amazonaws.com/cases/36358/file_6a7c5894c8a9a.pdf?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAQL62SKTN6WWYB35K%2F20260825%2Fus-west-1%2Fs3%2Faws4_request&X-Amz-Date=20260825T082327Z&X-Amz-SignedHeaders=host&X-Amz-Expires=82800&X-Amz-Signature=17680b4368b4fd30671e48421ecf265e61e5fc9c40b1df21365264799cca5ecc",
+      "content_type": "application/pdf",
+      "extension": ".pdf",
+      "local_path": "C:\\Users\\USER\\AppData\\Local\\Temp\\case-job-042a9556-79e5-43e7-82dc-6fc1bc2412a4-6htspyj5\\source_8.pdf",
+      "file_hash": "5bdd0b547f2cb987a19c9cb84a8289518272047625c54d32fae59d4beda86e75",
+      "latex_path": "D:\\PROJECTS\\USI\\algoflow\\media\\eb_1a_a_rag\\public\\36358\\e73e56c017d0db621c092e8b570ec808687093e240338744c5b620a7c654ff11\\latex\\5bdd0b547f2cb987a19c9cb84a8289518272047625c54d32fae59d4beda86e75.tex",
+      "page_count": 1,
+      "extraction_mode": "native_text",
+      "page_entries": [
+        {
+          "page_number": 1,
+          "extraction_mode": "native_text"
+        }
+      ]
+    },
+    {
+      "name": "source-9",
+      "original_filename": "[EDUCATIONAL CREDENTIALS] Training Certificate.pdf",
+      "url": "https://visa26.s3.us-west-1.amazonaws.com/cases/36358/file_6a82edce20914.pdf?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAQL62SKTN6WWYB35K%2F20260825%2Fus-west-1%2Fs3%2Faws4_request&X-Amz-Date=20260825T082327Z&X-Amz-SignedHeaders=host&X-Amz-Expires=82800&X-Amz-Signature=485bd3e240bbf7984062a817f49322de7ebe753721c5cb8dd0cad9091af73cde",
+      "content_type": "application/pdf",
+      "extension": ".pdf",
+      "local_path": "C:\\Users\\USER\\AppData\\Local\\Temp\\case-job-042a9556-79e5-43e7-82dc-6fc1bc2412a4-6htspyj5\\source_9.pdf",
+      "file_hash": "7fab888f42222891b2aeb1a8e365e0ae81aab897f19ddc84879f20342c47dac7",
+      "latex_path": "D:\\PROJECTS\\USI\\algoflow\\media\\eb_1a_a_rag\\public\\36358\\e73e56c017d0db621c092e8b570ec808687093e240338744c5b620a7c654ff11\\latex\\7fab888f42222891b2aeb1a8e365e0ae81aab897f19ddc84879f20342c47dac7.tex",
+      "page_count": 1,
+      "extraction_mode": "native_text",
+      "page_entries": [
+        {
+          "page_number": 1,
+          "extraction_mode": "native_text"
+        }
+      ]
+    },
+    {
+      "name": "source-10",
+      "original_filename": "Birth Certificate.pdf",
+      "url": "https://visa26.s3.us-west-1.amazonaws.com/cases/36358/file_6a7c58fa6c439.pdf?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAQL62SKTN6WWYB35K%2F20260825%2Fus-west-1%2Fs3%2Faws4_request&X-Amz-Date=20260825T082327Z&X-Amz-SignedHeaders=host&X-Amz-Expires=82800&X-Amz-Signature=30f377f381d84125bf1272a4d10f0f2b9a8c1c7c46ec080028d6293d74d3eb56",
+      "content_type": "application/pdf",
+      "extension": ".pdf",
+      "local_path": "C:\\Users\\USER\\AppData\\Local\\Temp\\case-job-042a9556-79e5-43e7-82dc-6fc1bc2412a4-6htspyj5\\source_10.pdf",
+      "file_hash": "65977917d036d6958036cce50df80ad2ecee8cf99631ef459a29a8802dbed90d",
+      "latex_path": "D:\\PROJECTS\\USI\\algoflow\\media\\eb_1a_a_rag\\public\\36358\\e73e56c017d0db621c092e8b570ec808687093e240338744c5b620a7c654ff11\\latex\\65977917d036d6958036cce50df80ad2ecee8cf99631ef459a29a8802dbed90d.tex",
+      "page_count": 1,
+      "extraction_mode": "native_text",
+      "page_entries": [
+        {
+          "page_number": 1,
+          "extraction_mode": "native_text"
+        }
+      ]
+    },
+    {
+      "name": "source-11",
+      "original_filename": "[DEPENDENT] Marriage Certificate.pdf",
+      "url": "https://visa26.s3.us-west-1.amazonaws.com/cases/36358/file_6a82ee0202884.pdf?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAQL62SKTN6WWYB35K%2F20260825%2Fus-west-1%2Fs3%2Faws4_request&X-Amz-Date=20260825T082327Z&X-Amz-SignedHeaders=host&X-Amz-Expires=82800&X-Amz-Signature=f1f52b085e6dc7a1c02186da32fa8921aa5ca83067bd585c7d6842aff7f4d709",
+      "content_type": "application/pdf",
+      "extension": ".pdf",
+      "local_path": "C:\\Users\\USER\\AppData\\Local\\Temp\\case-job-042a9556-79e5-43e7-82dc-6fc1bc2412a4-6htspyj5\\source_11.pdf",
+      "file_hash": "3dca6072ef95e7ac5551bfda6aa25afe5d2cc9de3d88c1a3bd8c4fb0ed9fe1ae",
+      "latex_path": "D:\\PROJECTS\\USI\\algoflow\\media\\eb_1a_a_rag\\public\\36358\\e73e56c017d0db621c092e8b570ec808687093e240338744c5b620a7c654ff11\\latex\\3dca6072ef95e7ac5551bfda6aa25afe5d2cc9de3d88c1a3bd8c4fb0ed9fe1ae.tex",
+      "page_count": 1,
+      "extraction_mode": "native_text",
+      "page_entries": [
+        {
+          "page_number": 1,
+          "extraction_mode": "native_text"
+        }
+      ]
+    },
+    {
+      "name": "source-12",
+      "original_filename": " Employment Verification Letter.docx",
+      "url": "https://visa26.s3.us-west-1.amazonaws.com/cases/36358/file_6a848c83a5432.docx?X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAQL62SKTN6WWYB35K%2F20260825%2Fus-west-1%2Fs3%2Faws4_request&X-Amz-Date=20260825T082327Z&X-Amz-SignedHeaders=host&X-Amz-Expires=82800&X-Amz-Signature=ac845b4bb2280ccc84d3c9bfa3e03a5696130285c7f7d3a755d5a17003a277c8",
+      "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "extension": ".docx",
+      "local_path": "C:\\Users\\USER\\AppData\\Local\\Temp\\case-job-042a9556-79e5-43e7-82dc-6fc1bc2412a4-6htspyj5\\source_12.docx",
+      "file_hash": "6b2335c4bf93067ed9929f6759a8ead250abbfd4f87a1e243f1eca2dcd3b6504",
+      "latex_path": "D:\\PROJECTS\\USI\\algoflow\\media\\eb_1a_a_rag\\public\\36358\\e73e56c017d0db621c092e8b570ec808687093e240338744c5b620a7c654ff11\\latex\\6b2335c4bf93067ed9929f6759a8ead250abbfd4f87a1e243f1eca2dcd3b6504.tex",
+      "page_count": 1,
+      "extraction_mode": "docx_text",
+      "page_entries": [
+        {
+          "page_number": 1,
+          "extraction_mode": "docx_text"
+        }
+      ]
+    }
+  ]
+}

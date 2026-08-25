@@ -2,17 +2,18 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import fields, replace
-from typing import Annotated, Any, Literal, TypeAlias, cast
+from typing import TYPE_CHECKING, Annotated, Any, Literal, TypeAlias, cast
 
 from openai import Omit as _Omit
 from openai._types import Body, Query
 from openai.types.responses import ResponseIncludable
-from openai.types.responses.response_create_params import ContextManagement
+from openai.types.responses.response_create_params import ContextManagement, PromptCacheOptions
 from openai.types.shared import Reasoning
-from pydantic import GetCoreSchemaHandler, TypeAdapter
+from pydantic import Field, FiniteFloat, GetCoreSchemaHandler, TypeAdapter
 from pydantic.dataclasses import dataclass
 from pydantic_core import core_schema
 
+from ._config_coercion import _declared_dataclass_type, coerce_dataclass_config
 from .retry import (
     ModelRetryBackoffInput,
     ModelRetryBackoffSettings,
@@ -79,6 +80,8 @@ _TRACEABLE_MODEL_SETTING_FIELDS = (
     "top_logprobs",
     "retry",
     "context_management",
+    "prompt_cache_options",
+    "timeout",
 )
 
 
@@ -141,7 +144,8 @@ class ModelSettings:
     store: bool | None = None
     """Whether to store the generated model response for later retrieval.
     For Responses API: automatically enabled when not specified.
-    For Chat Completions API: disabled when not specified."""
+    For Chat Completions API: enabled when not specified for the official OpenAI API, and
+    omitted for other providers so their own default applies."""
 
     prompt_cache_retention: Literal["in_memory", "24h"] | None = None
     """The retention policy for the prompt cache. Set to `24h` to enable extended
@@ -191,20 +195,85 @@ class ModelSettings:
     to enable server-side compaction when the rendered context crosses a token threshold.
     """
 
-    def resolve(self, override: ModelSettings | None) -> ModelSettings:
+    prompt_cache_options: PromptCacheOptions | None = None
+    """Prompt-cache configuration for OpenAI API requests.
+
+    Use ``{"mode": "explicit", "ttl": "30m"}`` with content-part cache breakpoints to
+    control which prompt prefixes are eligible for caching.
+    """
+
+    preserve_raw_usage: bool | None = None
+    """Whether to preserve the provider usage payload on completed model responses.
+
+    When enabled and the model adapter still has the unnormalized provider payload,
+    ``ModelResponse.raw_usage`` contains a JSON-compatible snapshot captured before the Agents
+    SDK normalizes missing usage fields. It remains ``None`` when usage is absent or upstream
+    normalization has already discarded field-presence information. This setting does not request
+    usage from the provider; use ``include_usage`` separately when a streaming provider requires it.
+    """
+
+    timeout: Annotated[FiniteFloat, Field(gt=0)] | None = None
+    """Maximum duration in seconds for each model-call attempt.
+
+    The timeout is enforced cooperatively through normal asyncio cancellation. It bounds the
+    complete model attempt, including transport waits, but does not replace provider-specific
+    phase timeout configuration or bound the full run, tool calls, or retry backoff.
+    """
+
+    if TYPE_CHECKING:
+
+        def __init__(
+            self,
+            temperature: float | None = None,
+            top_p: float | None = None,
+            frequency_penalty: float | None = None,
+            presence_penalty: float | None = None,
+            tool_choice: ToolChoice | dict[str, Any] = None,
+            parallel_tool_calls: bool | None = None,
+            truncation: Literal["auto", "disabled"] | None = None,
+            max_tokens: int | None = None,
+            reasoning: Reasoning | dict[str, Any] | None = None,
+            verbosity: Literal["low", "medium", "high"] | None = None,
+            metadata: dict[str, str] | None = None,
+            store: bool | None = None,
+            prompt_cache_retention: Literal["in_memory", "24h"] | None = None,
+            include_usage: bool | None = None,
+            response_include: list[ResponseIncludable | str] | None = None,
+            top_logprobs: int | None = None,
+            extra_query: Query | None = None,
+            extra_body: Body | None = None,
+            extra_headers: Headers | None = None,
+            extra_args: dict[str, Any] | None = None,
+            retry: ModelRetrySettings | dict[str, Any] | None = None,
+            context_management: list[ContextManagement] | None = None,
+            prompt_cache_options: PromptCacheOptions | None = None,
+            preserve_raw_usage: bool | None = None,
+            timeout: Annotated[FiniteFloat, Field(gt=0)] | None = None,
+        ) -> None: ...
+
+    def resolve(self, override: ModelSettings | dict[str, Any] | None) -> ModelSettings:
         """Produce a new ModelSettings by overlaying any non-None values from the
         override on top of this instance."""
         if override is None:
             return self
 
+        override_fields = set(override) if isinstance(override, dict) else None
+        override = _coerce_model_settings(
+            override,
+            parameter_name="ModelSettings override",
+            model_settings_type=type(self),
+        )
         changes = {
             field.name: getattr(override, field.name)
             for field in fields(self)
-            if getattr(override, field.name) is not None
+            if (override_fields is None or field.name in override_fields)
+            and getattr(override, field.name, None) is not None
         }
 
         # Handle extra_args merging specially - merge dictionaries instead of replacing.
-        if self.extra_args is not None or override.extra_args is not None:
+        if (override_fields is None or "extra_args" in override_fields) and (
+            self.extra_args is not None or override.extra_args is not None
+        ):
             merged_args = {}
             if self.extra_args:
                 merged_args.update(self.extra_args)
@@ -212,7 +281,9 @@ class ModelSettings:
                 merged_args.update(override.extra_args)
             changes["extra_args"] = merged_args if merged_args else None
 
-        if self.retry is not None or override.retry is not None:
+        if (override_fields is None or "retry" in override_fields) and (
+            self.retry is not None or override.retry is not None
+        ):
             changes["retry"] = _merge_retry_settings(self.retry, override.retry)
 
         return replace(self, **changes)
@@ -224,6 +295,83 @@ class ModelSettings:
         """Serialize settings for tracing without provider-specific request extras."""
         payload = self.to_json_dict()
         return {key: payload[key] for key in _TRACEABLE_MODEL_SETTING_FIELDS if key in payload}
+
+
+def _coerce_model_settings(
+    value: ModelSettings | dict[str, Any],
+    *,
+    parameter_name: str,
+    model_settings_type: type[ModelSettings] = ModelSettings,
+    inherited_model_settings: ModelSettings | None = None,
+) -> ModelSettings:
+    """Normalize SDK-owned model settings without changing existing typed instances."""
+    del inherited_model_settings
+    if isinstance(value, ModelSettings):
+        return value
+    if not isinstance(value, dict):
+        raise TypeError(
+            f"{parameter_name} must be a ModelSettings instance or a dict, "
+            f"got {type(value).__name__}"
+        )
+
+    field_names = {model_field.name for model_field in fields(model_settings_type)}
+    unknown_fields = sorted(str(name) for name in value if name not in field_names)
+    if unknown_fields:
+        raise TypeError(f"Unknown model settings: {', '.join(unknown_fields)}")
+
+    _validate_first_party_model_settings(value)
+    return coerce_dataclass_config(value, model_settings_type, parameter_name=parameter_name)
+
+
+def _declared_model_settings_type(
+    owner_type: type[Any],
+    field_name: str,
+) -> type[ModelSettings]:
+    return _declared_dataclass_type(owner_type, field_name, ModelSettings)
+
+
+def _validate_first_party_model_settings(value: dict[str, Any]) -> None:
+    """Reject SDK-owned structured-setting typos while preserving OpenAI model extras."""
+
+    def validate_fields(payload: object, names: set[str], path: str) -> None:
+        if not isinstance(payload, Mapping):
+            return
+        unknown_fields = sorted(str(name) for name in payload if name not in names)
+        if unknown_fields:
+            raise TypeError(f"Unknown model settings in {path}: {', '.join(unknown_fields)}")
+
+    validate_fields(
+        value.get("tool_choice"),
+        {model_field.name for model_field in fields(MCPToolChoice)},
+        "tool_choice",
+    )
+    retry = value.get("retry")
+    validate_fields(
+        retry,
+        {model_field.name for model_field in fields(ModelRetrySettings)},
+        "retry",
+    )
+    if isinstance(retry, Mapping):
+        validate_fields(
+            retry.get("backoff"),
+            {model_field.name for model_field in fields(ModelRetryBackoffSettings)},
+            "retry.backoff",
+        )
+
+    context_management = value.get("context_management")
+    if isinstance(context_management, list | tuple):
+        for index, item in enumerate(context_management):
+            validate_fields(
+                item,
+                set(ContextManagement.__annotations__),
+                f"context_management[{index}]",
+            )
+
+    validate_fields(
+        value.get("prompt_cache_options"),
+        set(PromptCacheOptions.__annotations__),
+        "prompt_cache_options",
+    )
 
 
 def _merge_retry_settings(

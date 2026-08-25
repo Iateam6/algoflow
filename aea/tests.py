@@ -1,3 +1,8 @@
-from django.test import TestCase
+from django.test import SimpleTestCase
 
-# Create your tests here.
+from case_jobs.tests.visa_contract import VisaPackageContractMixin
+
+
+class TNContractTests(VisaPackageContractMixin, SimpleTestCase):
+    module_name = "tn"
+    url_prefix = "/api/tn/"

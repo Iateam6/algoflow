@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import inspect
 import json
 import os
 import time
@@ -7,7 +9,7 @@ from collections.abc import AsyncIterator
 from copy import copy
 from typing import Any, Literal, cast, overload
 
-from openai.types.responses.response_usage import InputTokensDetails, OutputTokensDetails
+from openai.types.responses.response_usage import OutputTokensDetails
 
 from agents.exceptions import ModelBehaviorError
 
@@ -39,7 +41,7 @@ from ... import _debug
 from ...agent_output import AgentOutputSchemaBase
 from ...handoffs import Handoff
 from ...items import ModelResponse, TResponseInputItem, TResponseStreamEvent
-from ...logger import logger
+from ...logger import log_model_action_debug, logger
 from ...model_settings import ModelSettings
 from ...models._openai_retry import get_openai_retry_advice
 from ...models._retry_runtime import should_disable_provider_managed_retries
@@ -56,7 +58,14 @@ from ...tool import Tool
 from ...tracing import generation_span
 from ...tracing.span_data import GenerationSpanData
 from ...tracing.spans import Span
-from ...usage import Usage
+from ...usage import (
+    Usage,
+    _cache_write_tokens,
+    _make_input_tokens_details,
+    _requests_for_response_without_usage,
+    model_usage_to_span_usage,
+)
+from ...util._error_tracing import model_span_errors
 from ...util._json import _to_dump_compatible
 
 
@@ -170,7 +179,7 @@ class LitellmModel(Model):
         """
         reasoning_effort: Any | None = None
 
-        if model_settings.reasoning:
+        if model_settings.reasoning is not None:
             reasoning_effort = model_settings.reasoning.effort
             if model_settings.reasoning.summary is not None:
                 logger.warning(
@@ -212,15 +221,22 @@ class LitellmModel(Model):
         conversation_id: str | None = None,  # unused
         prompt: Any | None = None,
     ) -> ModelResponse:
-        with generation_span(
-            model=str(self.model),
-            model_config=model_config_for_trace(
-                model_settings,
-                base_url=self.base_url or "",
-                extra_config={"model_impl": "litellm"},
+        with (
+            generation_span(
+                model=str(self.model),
+                model_config=model_config_for_trace(
+                    model_settings,
+                    base_url=self.base_url or "",
+                    extra_config={"model_impl": "litellm"},
+                ),
+                disabled=tracing.is_disabled(),
+            ) as span_generation,
+            model_span_errors(
+                span_generation,
+                message="Error getting response",
+                trace_include_sensitive_data=tracing.include_data(),
             ),
-            disabled=tracing.is_disabled(),
-        ) as span_generation:
+        ):
             response = await self._fetch_response(
                 system_instructions,
                 input,
@@ -247,13 +263,12 @@ class LitellmModel(Model):
             else:
                 if message is not None:
                     logger.debug(
-                        f"""LLM resp:\n{
-                            json.dumps(message.model_dump(), indent=2, ensure_ascii=False)
-                        }\n"""
+                        "LLM resp:\n%s\n",
+                        json.dumps(message.model_dump(), indent=2, ensure_ascii=False),
                     )
                 else:
-                    finish_reason = first_choice.finish_reason if first_choice else "-"
-                    logger.debug(f"LLM resp had no message. finish_reason: {finish_reason}")
+                    finish_reason = first_choice.finish_reason if first_choice is not None else "-"
+                    logger.debug("LLM resp had no message. finish_reason: %s", finish_reason)
 
             if hasattr(response, "usage"):
                 response_usage = response.usage
@@ -263,11 +278,14 @@ class LitellmModel(Model):
                         input_tokens=response_usage.prompt_tokens,
                         output_tokens=response_usage.completion_tokens,
                         total_tokens=response_usage.total_tokens,
-                        input_tokens_details=InputTokensDetails(
+                        input_tokens_details=_make_input_tokens_details(
                             cached_tokens=getattr(
                                 response_usage.prompt_tokens_details, "cached_tokens", 0
                             )
-                            or 0
+                            or 0,
+                            cache_write_tokens=_cache_write_tokens(
+                                response_usage.prompt_tokens_details
+                            ),
                         ),
                         output_tokens_details=OutputTokensDetails(
                             reasoning_tokens=getattr(
@@ -276,11 +294,12 @@ class LitellmModel(Model):
                             or 0
                         ),
                     )
-                    if response.usage
-                    else Usage()
+                    if response_usage is not None
+                    # The request completed, so it counts even when the provider omits usage.
+                    else Usage(requests=1)
                 )
             else:
-                usage = Usage()
+                usage = Usage(requests=1)
                 logger.warning("No usage information returned from Litellm")
 
             if tracing.include_data():
@@ -296,6 +315,27 @@ class LitellmModel(Model):
                 "output_tokens_details": usage.output_tokens_details.model_dump(),
             }
 
+            # Surface content-filter refusals explicitly. Some providers (e.g.
+            # Anthropic on Amazon Bedrock) signal a safety block only via
+            # ``finish_reason == "content_filter"`` with an empty message and no
+            # ``refusal`` field. Without this, ``message`` converts to zero
+            # output items and the caller sees an indistinguishable "empty turn",
+            # which drives agent loops into fruitless retries. Synthesize a
+            # refusal so downstream handling (ResponseOutputRefusal) fires.
+            if (
+                message is not None
+                and first_choice is not None
+                and getattr(first_choice, "finish_reason", None) == "content_filter"
+                and not message.content
+                and not getattr(message, "tool_calls", None)
+            ):
+                provider_specific_fields = getattr(message, "provider_specific_fields", None) or {}
+                if not provider_specific_fields.get("refusal"):
+                    provider_specific_fields["refusal"] = (
+                        "Response withheld by the provider's content filter."
+                    )
+                    message.provider_specific_fields = provider_specific_fields
+
             # Build provider_data for provider specific fields
             provider_data: dict[str, Any] = {"model": self.model}
             if message is not None and hasattr(response, "id"):
@@ -310,11 +350,36 @@ class LitellmModel(Model):
                 else []
             )
 
+            # LiteLLM's Choices omits the logprobs attribute entirely when it was not requested,
+            # so access it defensively (mirrors the finish_reason handling above).
+            logprob_models = None
+            choice_logprobs = (
+                getattr(first_choice, "logprobs", None) if first_choice is not None else None
+            )
+            if choice_logprobs is not None and getattr(choice_logprobs, "content", None):
+                logprob_models = ChatCmplHelpers.convert_logprobs_for_output_text(
+                    choice_logprobs.content
+                )
+
+            if logprob_models:
+                self._attach_logprobs_to_output(items, logprob_models)
+
             return ModelResponse(
                 output=items,
                 usage=usage,
                 response_id=None,
             )
+
+    def _attach_logprobs_to_output(self, output_items: list[Any], logprobs: list[Any]) -> None:
+        from openai.types.responses import ResponseOutputMessage, ResponseOutputText
+
+        for output_item in output_items:
+            if not isinstance(output_item, ResponseOutputMessage):
+                continue
+            for content in output_item.content:
+                if isinstance(content, ResponseOutputText):
+                    content.logprobs = logprobs
+                    return
 
     async def stream_response(
         self,
@@ -329,15 +394,22 @@ class LitellmModel(Model):
         conversation_id: str | None = None,  # unused
         prompt: Any | None = None,
     ) -> AsyncIterator[TResponseStreamEvent]:
-        with generation_span(
-            model=str(self.model),
-            model_config=model_config_for_trace(
-                model_settings,
-                base_url=self.base_url or "",
-                extra_config={"model_impl": "litellm"},
+        with (
+            generation_span(
+                model=str(self.model),
+                model_config=model_config_for_trace(
+                    model_settings,
+                    base_url=self.base_url or "",
+                    extra_config={"model_impl": "litellm"},
+                ),
+                disabled=tracing.is_disabled(),
+            ) as span_generation,
+            model_span_errors(
+                span_generation,
+                message="Error streaming response",
+                trace_include_sensitive_data=tracing.include_data(),
             ),
-            disabled=tracing.is_disabled(),
-        ) as span_generation:
+        ):
             response, stream = await self._fetch_response(
                 system_instructions,
                 input,
@@ -352,34 +424,71 @@ class LitellmModel(Model):
             )
 
             final_response: Response | None = None
-            async for chunk in ChatCmplStreamHandler.handle_stream(
-                response, stream, model=self.model
-            ):
-                yield chunk
+            close_stream_in_background = False
+            yielded_terminal_event = False
+            try:
+                async for chunk in ChatCmplStreamHandler.handle_stream(
+                    response, stream, model=self.model
+                ):
+                    if chunk.type == "response.completed":
+                        final_response = chunk.response
+                        yielded_terminal_event = True
+                        # Populate the span before yielding, because a caller that stops
+                        # consuming at the terminal event closes this generator and never
+                        # resumes it, which would leave the span without usage.
+                        self._populate_stream_generation_span(
+                            span_generation, final_response, tracing
+                        )
 
-                if chunk.type == "response.completed":
-                    final_response = chunk.response
+                    yield chunk
+            except asyncio.CancelledError:
+                close_stream_in_background = True
+                self._schedule_async_iterator_close(stream)
+                raise
+            finally:
+                if not close_stream_in_background:
+                    try:
+                        await self._close_stream_allowing_background_completion(stream)
+                    except Exception as exc:
+                        if yielded_terminal_event:
+                            log_model_action_debug(
+                                logger,
+                                "Ignoring stream cleanup error after terminal event",
+                                exc,
+                            )
+                        else:
+                            raise
 
-            if tracing.include_data() and final_response:
-                span_generation.span_data.output = [final_response.model_dump()]
+    @staticmethod
+    def _populate_stream_generation_span(
+        span_generation: Span[GenerationSpanData],
+        final_response: Response,
+        tracing: ModelTracing,
+    ) -> None:
+        if tracing.include_data():
+            span_generation.span_data.output = [final_response.model_dump()]
 
-            if final_response and final_response.usage:
-                span_generation.span_data.usage = {
-                    "requests": 1,
-                    "input_tokens": final_response.usage.input_tokens,
-                    "output_tokens": final_response.usage.output_tokens,
-                    "total_tokens": final_response.usage.total_tokens,
-                    "input_tokens_details": (
-                        final_response.usage.input_tokens_details.model_dump()
-                        if final_response.usage.input_tokens_details
-                        else {"cached_tokens": 0}
-                    ),
-                    "output_tokens_details": (
-                        final_response.usage.output_tokens_details.model_dump()
-                        if final_response.usage.output_tokens_details
-                        else {"reasoning_tokens": 0}
-                    ),
-                }
+        if final_response.usage is not None:
+            span_generation.span_data.usage = {
+                "requests": 1,
+                "input_tokens": final_response.usage.input_tokens,
+                "output_tokens": final_response.usage.output_tokens,
+                "total_tokens": final_response.usage.total_tokens,
+                "input_tokens_details": (
+                    final_response.usage.input_tokens_details.model_dump()
+                    if final_response.usage.input_tokens_details is not None
+                    else {"cached_tokens": 0, "cache_write_tokens": 0}
+                ),
+                "output_tokens_details": (
+                    final_response.usage.output_tokens_details.model_dump()
+                    if final_response.usage.output_tokens_details is not None
+                    else {"reasoning_tokens": 0}
+                ),
+            }
+        elif _requests_for_response_without_usage(final_response):
+            # Keep streamed tracing aligned with the non-streaming path, which records the
+            # request even when the provider reports no usage.
+            span_generation.span_data.usage = model_usage_to_span_usage(Usage(requests=1))
 
     @overload
     async def _fetch_response(
@@ -463,13 +572,6 @@ class LitellmModel(Model):
         if tracing.include_data():
             span.span_data.input = converted_messages
 
-        parallel_tool_calls = (
-            True
-            if model_settings.parallel_tool_calls and tools and len(tools) > 0
-            else False
-            if model_settings.parallel_tool_calls is False
-            else None
-        )
         tool_choice = Converter.convert_tool_choice(model_settings.tool_choice)
         response_format = Converter.convert_response_format(output_schema)
 
@@ -479,6 +581,7 @@ class LitellmModel(Model):
             converted_tools.append(Converter.convert_handoff_tool(handoff))
 
         converted_tools = _to_dump_compatible(converted_tools)
+        parallel_tool_calls = model_settings.parallel_tool_calls if converted_tools else None
 
         if _debug.DONT_LOG_MODEL_DATA:
             logger.debug("Calling LLM")
@@ -494,12 +597,14 @@ class LitellmModel(Model):
                 ensure_ascii=False,
             )
             logger.debug(
-                f"Calling Litellm model: {self.model}\n"
-                f"{messages_json}\n"
-                f"Tools:\n{tools_json}\n"
-                f"Stream: {stream}\n"
-                f"Tool choice: {tool_choice}\n"
-                f"Response format: {response_format}\n"
+                "Calling Litellm model: %s\n%s\nTools:\n%s\nStream: %s\n"
+                "Tool choice: %s\nResponse format: %s\n",
+                self.model,
+                messages_json,
+                tools_json,
+                stream,
+                tool_choice,
+                response_format,
             )
 
         reasoning_effort = self._get_reasoning_effort(model_settings)
@@ -526,6 +631,11 @@ class LitellmModel(Model):
         if model_settings.extra_args:
             extra_kwargs.update(model_settings.extra_args)
 
+        if converted_tools:
+            # SDK tools are already converted to ordinary function tools, so LiteLLM's proxy-only
+            # MCP discovery would add unsupported server dependencies without handling them.
+            extra_kwargs.setdefault("_skip_mcp_handler", True)
+
         if should_disable_provider_managed_retries():
             # Preserve provider-managed retries on the first attempt, but make runner retries the
             # sole retry layer by forcing LiteLLM's retry knobs off on replay attempts.
@@ -534,6 +644,12 @@ class LitellmModel(Model):
 
         # Prevent duplicate reasoning_effort kwargs when it was promoted to a top-level argument.
         extra_kwargs.pop("reasoning_effort", None)
+
+        # The Chat Completions API requires logprobs=True whenever top_logprobs is set. Defer to a
+        # caller-supplied logprobs (via extra_args, already merged into extra_kwargs) to avoid a
+        # duplicate-key collision.
+        if model_settings.top_logprobs is not None and "logprobs" not in extra_kwargs:
+            extra_kwargs["logprobs"] = True
 
         ret = await litellm.acompletion(
             model=self.model,
@@ -773,6 +889,54 @@ class LitellmModel(Model):
 
     def _merge_headers(self, model_settings: ModelSettings):
         return {**HEADERS, **(model_settings.extra_headers or {}), **(HEADERS_OVERRIDE.get() or {})}
+
+    @staticmethod
+    async def _maybe_aclose(value: Any) -> None:
+        aclose = getattr(value, "aclose", None)
+        if callable(aclose):
+            await aclose()
+            return
+
+        close = getattr(value, "close", None)
+        if callable(close):
+            result = close()
+            if inspect.isawaitable(result):
+                await result
+
+    def _schedule_async_iterator_close(self, iterator: Any) -> None:
+        self._detach_stream_close(asyncio.ensure_future(self._maybe_aclose(iterator)))
+
+    async def _close_stream_allowing_background_completion(self, iterator: Any) -> None:
+        """Close the provider stream, letting an in-flight close finish in the background.
+
+        Cancellation can arrive while `aclose()` is already awaiting the provider. Shielding the
+        close and detaching that exact task keeps it running instead of abandoning it half-done,
+        and avoids starting a second close: re-closing a provider stream is not guaranteed to be
+        safe or idempotent.
+        """
+        close_task = asyncio.ensure_future(self._maybe_aclose(iterator))
+        try:
+            await asyncio.shield(close_task)
+        except asyncio.CancelledError:
+            self._detach_stream_close(close_task)
+            raise
+
+    def _detach_stream_close(self, close_task: asyncio.Future[None]) -> None:
+        if close_task.done():
+            self._consume_background_cleanup_task_result(close_task)
+            return
+        close_task.add_done_callback(self._consume_background_cleanup_task_result)
+
+    @staticmethod
+    def _consume_background_cleanup_task_result(task: asyncio.Future[Any]) -> None:
+        try:
+            task.result()
+        except asyncio.CancelledError:
+            pass
+        except Exception as exc:
+            log_model_action_debug(
+                logger, "Background stream cleanup failed after cancellation", exc
+            )
 
 
 class LitellmConverter:

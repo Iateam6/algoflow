@@ -46,6 +46,8 @@ def pretty_print_run_error_details(result: "RunErrorDetails") -> str:
     output += f"\n- {len(result.raw_responses)} raw response(s)"
     output += f"\n- {len(result.input_guardrail_results)} input guardrail result(s)"
     output += f"\n- {len(result.output_guardrail_results)} output guardrail result(s)"
+    output += f"\n- {len(result.tool_input_guardrail_results)} tool input guardrail result(s)"
+    output += f"\n- {len(result.tool_output_guardrail_results)} tool output guardrail result(s)"
     output += "\n(See `RunErrorDetails` for more details)"
 
     return output
@@ -53,7 +55,7 @@ def pretty_print_run_error_details(result: "RunErrorDetails") -> str:
 
 def pretty_print_run_result_streaming(result: "RunResultStreaming") -> str:
     output = "RunResultStreaming:"
-    output += f'\n- Current agent: Agent(name="{result.current_agent.name}", ...)'
+    output += f'\n- Current agent: Agent(name="{result.last_agent.name}", ...)'
     output += f"\n- Current turn: {result.current_turn}"
     output += f"\n- Max turns: {result.max_turns}"
     output += f"\n- Is complete: {result.is_complete}"

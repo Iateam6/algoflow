@@ -3,7 +3,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 
-from .openai_client import get_openai_client
+from case_jobs.integrations.openai_client import get_openai_client
 
 
 logger = logging.getLogger(__name__)
@@ -1032,6 +1032,13 @@ def summarise_source_manifest(source_manifest: list[dict]) -> str:
         )
 
     return "\n".join(lines) if lines else "- No source manifest available."
+
+
+def get_document_template(file_type: str) -> str:
+    prompt = build_prompt_registry().get(file_type)
+    if not prompt:
+        raise ValueError(f"No prompt found for document type: {file_type}")
+    return prompt.template.strip()
 
 
 def build_generation_prompt(file_type: str, retrieved_context, source_manifest: list[dict]) -> str:

@@ -1,0 +1,2 @@
+"""Shared generation pipeline stages."""
+

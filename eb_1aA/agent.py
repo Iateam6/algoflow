@@ -3,12 +3,12 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 
-from .openai_client import get_openai_client
+from case_jobs.integrations.openai_client import get_openai_client
 
 
 logger = logging.getLogger(__name__)
 
-GENERATION_MODEL = "o3-mini"
+GENERATION_MODEL = "gpt-5.6"
 
 
 @dataclass(frozen=True)
@@ -22,7 +22,7 @@ def format_current_date() -> str:
 
 
 def build_prompt_registry():
-    """Build the prompt registry for each L1a output document."""
+    """Build the prompt registry for each EB-1A I-140 with Sponsors output document."""
     # Get today’s date in the desired format
     current_date = format_current_date()
 
@@ -61,53 +61,132 @@ def build_prompt_registry():
 
                 **Step 2**: Use the following structure for the letter:
                 ``` 
-                Premium Processing  
-                USCIS [Service Center Name]  
-                [Street Address]  
-                [City, State ZIP]  
+                **[Date]**
+                
+                **U.S. Port of Entry / USCIS Address**
+                **NAFTA Free Trade Examiner**
 
-                Date: [YYYY‑MM‑DD]  
+                ### **RE: EB-1A I-140 with Sponsors Application**
 
-                RE:  Request for First Preference EB-1A I-140 with Sponsors 
-                    Self‑Petitioner: [Beneficiary’s Full Name]  
-                    Position/Title: [e.g., EVP of Technology]  
+                **Employer:** [Company Name]<br>
+                **Beneficiary:** [Beneficiary Full Name]<br>
+                **Position:** [Job Title]<br>
+                **Country:** [Country name of the beneficiary]
 
-                Dear Immigration Officer:
 
-                Please find enclosed the immigrant petition filed on behalf of [Beneficiary’s Full Name] as an EB-1A I-140 with Sponsors Alien of Extraordinary Ability.
+                Dear Free Trade Examiner:
 
-                The following items are included in support of this petition:
+                This letter is being submitted in support of **[Beneficiary Full Name]**’s EB-1A I-140 with Sponsors application. **[He/She/They]** is a **[Canadian/Mexican]** national seeking EB-1A status as a **[EB-1A Profession]** under the provisions of the USMCA.
 
-                1.  A check for $[Amount] for the I‑907 premium processing fee  
-                2.  A check for $[Amount] for the I‑140 filing fee  
-                3.  Form I‑907, “Request for Premium Processing Service”  
-                4.  Form G‑28, “Notice of Entry of Appearance as Attorney or Accredited Representative”  
-                5.  Form I‑140, “Immigrant Petition for Alien Worker”  
-                6.  [Beneficiary’s Last Name]’s biographical documents:  
-                    a. Passport biographical page  
-                    b. O‑1 approval notice  
-                    c. Most recent I‑94  
-                7.  Attorney’s letter of support  
-                8.  Exhibit list  
-                9.  Exhibits evidencing [Beneficiary’s Last Name]’s EB-1A I-140 with Sponsors credentials  
+                **[Beneficiary Full Name]** qualifies for EB-1A classification by virtue of **[his/her/their]** **[Degree]** in **[Field of Study]** and substantial experience in the field. **[He/She/They]** will be employed by **[Company Name]** in the position of **[Job Title]**, where **[he/she/they]** will **[brief description of duties — 2-3 sentences]**.
 
-                We respectfully submit that the enclosed documentation establishes [Beneficiary’s Full Name]’s internationally recognized achievements and abilities as a leader in the [field] industry, and that he/she is among the small percentage of individuals who have risen to the top of his/her field.  [Beneficiary’s Last Name] therefore merits classification as an Alien of Extraordinary Ability.
+                **[Beneficiary Full Name]** will receive an annual compensation of **$[Annual Salary]**. The employment is expected to begin on **[Start Date]** and continue for up to three years. **[He/She/They]** has declared the intent to depart the United States upon completion of the authorized period of stay.
 
-                If you require any further information or documentation to support the attached petition, please do not hesitate to contact our office.
+                **Enclosed, please find the following materials in support of this application:**
 
-                Very truly yours,
+                [Add the provided exhibit here with a short description like bellow
+                EXAMPLE;
+                Exhibit 1:	Form G-1450 in the amount of $2,965 for the I-907 Premium Processing fee
+                            Form G-1450 in the amount of $510 for the I-129 Non-Immigrant Petition
+                            Form G-1450 in the amount of $300 for the Asylum fee.
+                            Form G-28 “Notice of Entry of Appearance as Attorney”
+                            Form I-907 “Request for Premium Processing”
+                            Form I-129 + TN Supplement “Non-Immigrant Petition for Alien Workers”
+                Exhibit 2:	Copy of Applicant’s Canadian Passport as proof of his Canadian citizenship, proof of lawful stay in the U.S., and proof of ties in home country.
+                Exhibit 3:   Letter of support and explanation for EB-1A qualification
+                Exhibit 4:   Copy of Applicant’s educational evaluation, diploma, and transcripts
+                Exhibit 5:   Copy of Applicant’s resume showing his work experience
+                Exhibit 6:   Job Offer Letter with Job Description
+                Exhibit 7:   Information about the Employer
+                NOTE: Do not use this in the generate file covers USE the provided one
+                ]
 
-                \_\_\_\_\_\_\_\_\_\_\_,  
-                [Authorized Signatory’s Name]
+                Thank you for your assistance. Should you require any additional information, please do not hesitate to contact our office.
+
+                **Very truly yours,**
+
+                **[Preparer/Lawyer's Full Name], Esq.**  
+                **[Firm Name]** 
                 ```
                 step 3.While selecting data to fill in the placeholders, use only accurate and relevant information from the provided input file or files. If the required information is not available, leave the placeholder blank. Do not attempt to fill placeholders with incorrect or unrelated data.
                 Step 4.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
-                Step 5.In the "Supporting Evidence & Exhibits" section, list only the exhibits for which supporting documents are actually provided in the input. Do not list exhibits that are missing or not provided. Do not include any placeholders or blank entries for missing exhibits. 
+                Step 5.In the "Exhibits", list only the exhibits from supporting documents are actually provided in the input. Do not list exhibits that are missing or not provided. Do not include any placeholders or blank entries for missing exhibits and the numbering of exhibits should start from 1 going on. 
                 Step 6.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
                 Step 7.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
                 Step 8.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
                 Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
+                """
+            ),
+        ),
+        "Intent to Depart": DocumentPrompt(
+            name="Intent to Depart Agent",
+            template=(
+                rf"""
+                Today’s date is {current_date}.
+                You are tasked with generating a intent to depart letter for an EB-1A I-140 with Sponsors visa application.
 
+                **Step 1**: Extract all necessary information only from the file provided. Do not use information from previous files or external sources. If any required information is missing, leave the corresponding placeholder blank; do not attempt to fill it with assumptions or unrelated data. This includes:
+                - Personal details of the beneficiary or the client.
+                - Employer details.
+                - Job description and duties.
+                - Required forms:
+                    - Form G-1145, E-Notification of Application/Petition Acceptance
+                    - Form G-28 (Company), Notice of Entry of Appearance as Attorney or Accredited Representative
+                    - Form I-907, Request for Premium Processing Service
+                    - Form I-140, Immigrant Petition for Alien Worker
+                - Supporting documents:
+                    - All degree certificates
+                    - Awards and recognitions
+                    - Degree evidence
+                    - Birth certificate
+                    - Form I-94 (Arrival/Departure Record)
+                    - Form W-2/1099 (Wage and Tax Statements)
+                    - Publications
+                    - Membership in organizations
+                    - Passport
+                    - Visa pages
+                    - Letters of recommendation
+                    - Formation documents (e.g., Articles of Incorporation)
+                    - Federal tax returns
+                    - Media reports
+
+                **Step 2**: Use the following structure for the letter:
+                ```
+                **Petitioner:** [Company Name]  
+                **Applicant:** [Mr./Ms.] [Beneficiary Full Name]  
+                **Nationality:** [Nationality]
+                **Classification:** EB-1A I-140 with Sponsors Application
+
+                **USCIS Filing Address / Port of Entry**
+
+                **EXPRESSION OF INTENT TO RETURN TO MY HOME COUNTRY, [COUNTRY NAME], UPON EXPIRATION OF MY EB-1A NON-IMMIGRANT STATUS**
+
+                An applicant who is the beneficiary of a non-immigrant visa petition will need to satisfy the immigration officer that his or her intent is to depart the United States at the end of his or her authorized stay in EB-1A status and not stay in the United States to adjust status or otherwise remain in the United States.
+
+                Below is [Mr./Ms.] **[Beneficiary Full Name]**’s declaration of intent to depart the United States upon completion of his/her authorized stay in EB-1A status.
+
+                **I, [Beneficiary Full Name], do hereby certify, swear, or affirm under penalty of perjury as to the truth of the following statements:**
+
+                1.I am a National and Citizen of **[Country]**. I permanently reside in **[Country of Residence]** at the following address: **[Beneficiary’s Foreign Address]**.
+
+                2.I am applying for EB-1A classification as a **[Job Title]** in **[Company Name]**, a U.S. Treaty Enterprise.
+
+                3.If the United States Citizenship and Immigration Services approves my application, I understand that my stay in the United States is temporary. Thus, I intend to remain in the U.S. strictly through the duration of my authorized stay pursuant to the TN status or any extension thereof. At the end of my authorized stay in TN status, I intend to leave the United States and return to **[Country]**. I do not intend to stay in the United States to adjust status or otherwise remain in the United States regardless of legality of status.
+
+                **Signature:**  
+                \_\_\_\_\_\_\_\_\_\_\_,
+
+                **By:** [Beneficiary Full Name]<br>
+                **Title:** [Job Title]<br>
+                **Company:** [Company Name]<br>
+                **Date:** [Date]
+                ```
+                step 3.While selecting data to fill in the placeholders, use only accurate and relevant information from the provided input file or files. If the required information is not available, leave the placeholder blank. Do not attempt to fill placeholders with incorrect or unrelated data.
+                Step 4.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
+                Step 5.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
+                Step 6.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
+                Step 7.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
+                Step 8.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
                 """
             ),
         ),
@@ -145,64 +224,66 @@ def build_prompt_registry():
 
                 **Step 2**: Use the following structure for the letter:
                 ```
-                [Letterhead or Law Firm Name]  
-                [Address Line 1]  
-                [Address Line 2]  
-                [City, State ZIP]  
+                **[Date]**
 
-                Date: [YYYY‑MM‑DD]  
-
-                RE: EB-1A I-140 with Sponsors Petition of [Beneficiary’s Full Name]  
-
-                Dear Immigration Officer:
-
-                Below please find our organized presentation of evidence in support of [Beneficiary’s Full Name]’s classification as an EB-1A I-140 with Sponsors nonimmigrant worker.  Each section corresponds to one of the key requirements for EB-1A I-140 with Sponsors classification:
-
-                1. **Documentation of Receipt of Lesser Nationally or Internationally Recognized Prizes or Awards for Excellence**  
-                – [Describe awards, dates, issuing organizations, and why they qualify.]
-
-                2. **Documentation of Membership in Associations in the Field Which Require Outstanding Achievements**  
-                – [List associations, membership criteria, and evidence of selection.]
-
-                3. **Published Material About the Beneficiary in Professional or Major Trade Publications or Media**  
-                – [Cite articles, dates, outlets, and excerpts relevant to the field.]
-
-                4. **Evidence of Participation, Either Individually or on a Panel, as a Judge of the Work of Others**  
-                – [Detail panels, dates, selection process, and scope of judging.]
-
-                5. **Evidence of Original Contributions of Major Significance to the Field**  
-                – [Summarize innovations, adoption by peers, citation metrics, and impact.]
-
-                6. **Authorship of Scholarly Articles in Professional Journals or Other Major Media**  
-                – [List publications, co‑authors, journal impact factors, and download/citation counts.]
-
-                7. **Display of the Beneficiary’s Work at Artistic Exhibitions or Showcases**  
-                – [Identify exhibitions or screenings, dates, venues, and audience reach.]
-
-                8. **Evidence That the Beneficiary Has Performed in a Leading or Critical Role for Organizations or Establishments with a Distinguished Reputation**  
-                – [Name companies or projects, describe role, and point to recognition.]
-
-                9. **Evidence of Commercial Success in the Performing Arts, as Shown by Box‑Office Receipts or Record, Cassette, Compact Disc, or Video Sales**  
-                – [Provide revenue figures, chart positions, and distributor confirmations.]
-
-                **Conclusion & Prayer for Relief**  
-                Based on the foregoing evidence (Sections 1–9), [Beneficiary’s Full Name] clearly meets the EB-1A I-140 with Sponsors criteria for specialty occupation.  We respectfully request that USCIS grant approval of the Form I‑140 petition.
-
-                If you require further information or documentation, please contact our office.
-
-                **very truly yours,**
-
-                \_\_\_\_\_\_\_\_\_\_\_, 
-                [Authorized Signatory’s Name]  
-              
+                **United States Customs and Border Protection / USCIS**
+                
+                ### **RE: Petition for EB-1A I-140 with Sponsors Status for Mr. / Ms. [Beneficiary Full Name]**
+                
+                **Profession (USMCA, formerly NAFTA):** [Job Title]
+                
+                Dear Sir or Madam:
+                
+                This letter is written in support of Mr. / Ms. **[Beneficiary Full Name]**'s petition for EB-1A I-140 with Sponsors status pursuant to the USMCA, formerly North American Free Trade Agreement ("NAFTA"). **[Company Name]** has made an offer of temporary employment to Mr. / Ms. **[Beneficiary Full Name]** in the position of **[Job Title]** (under the USMCA classification of **[Job Title]**) with a monthly base salary of $[Monthly Salary] which translates to **$[Annual Salary]** annually. We are seeking the approval of his/her petition to enable **[Company Name]** to employ him/her immediately upon the approval of his/her EB-1A I-140 with Sponsors visa, up to three years.
+                
+                ### BACKGROUND OF THE EMPLOYER
+                
+                **[Company Name]**
+                
+                **[Company Name]** is **[full company description]**. (See the exhibit(s) containing the employer background information)
+                
+                ### Job Title
+                
+                **[Company Name]** has offered Mr. / Ms. **[Beneficiary Full Name]** the position of **[Job Title]** in which capacity he/she will serve at the pleasure and assignment of **[Name of Immediate Supervisor]**. In his/her position he/she will be responsible for the following duties:
+                
+                **[Duty 1 in bulet point]**
+                **[Duty 2 in bulet point]**
+                **[Duty 3 in bulet point]**
+                **[Duty 4 in bulet point]**
+                **[Duty 5 in bulet point]**
+                **[Duty 6 in bulet point]**
+                **[Duty 7 in bulet point]**
+                **[Duty 8 in bulet point]**
+                **[Duty 9 in bulet point]**
+                **[Duty 10 in bulet point]**
+                
+                This is a strategic and consultative role designed to support the growth and cohesion of **[Company Name]**'s efforts. (See the exhibit(s) containing the job offer letter, job duties and responsibilities, and consulting agreement)
+                
+                ### APPLICANT'S QUALIFICATIONS
+                
+                Mr. / Ms. **[Beneficiary Full Name]** holds a bachelor's degree in **[Degree]** with a major in **[Major]** from **[University Name]**, providing a strong academic foundation. **[His/Her]** career spans diverse leadership roles. **[Brief professional summary]**.
+                
+                Mr. / Ms. **[Beneficiary Full Name]**'s extensive background in **[key areas]** positions him/her as a highly capable candidate for a **[Job Title]** role. (See the exhibit(s) containing Mr. / Ms. **[Beneficiary Full Name]**'s educational and professional credentials)
+                
+                ### CONCLUSION
+                
+                It is evident that Mr. / Ms. **[Beneficiary Full Name]** is eligible for the EB-1A I-140 with Sponsors visa as a **[Job Title]** as he/she possesses the appropriate degree and a considerable number of years of experience. **[Company Name]** offers Mr. / Ms. **[Beneficiary Full Name]** employment immediately upon the approval of his/her EB-1A I-140 with Sponsors visa, up to three years. He/She will be compensated at a monthly base salary of $[Monthly Salary] which translates to **$[Annual Salary]** annually.
+                
+                For the foregoing reasons, we respectfully request your favorable adjudication of his/her EB-1A I-140 with Sponsors petition on behalf of Mr. / Ms. **[Beneficiary Full Name]**.
+                
+                **Very truly yours,**
+                
+                **[Name of Immediate Supervisor]**  
+                **[Position]**  
+                **[Company Name]**  
+                **[Contact Information]**
                 ```
                 step 3.While selecting data to fill in the placeholders, use only accurate and relevant information from the provided input file or files. If the required information is not available, leave the placeholder blank. Do not attempt to fill placeholders with incorrect or unrelated data.
                 Step 4.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
-                Step 5.In the "Supporting Evidence & Exhibits" section, list only the exhibits for which supporting documents are actually provided in the input. Do not list exhibits that are missing or not provided. Do not include any placeholders or blank entries for missing exhibits. 
-                Step 6.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
-                Step 7.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
-                Step 8.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
-                Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
+                Step 5.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
+                Step 6.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
+                Step 7.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
+                Step 8.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
                 """
             ),
         ),
@@ -310,53 +391,65 @@ def build_prompt_registry():
 
                 **Step 2**: Use the following structure for the letter:
                 ```
-                                                Exhibit List  
-                                    Self‑Petitioner: [Beneficiary’s Full Name]  
-                                    Position: [Beneficiary’s Position/Title]  
+                **List of Supporting Documents**  
+                **EB-1A I-140 with Sponsors Visa Application**
 
-                Exhibit 1:  [Description of Exhibit 1]  
-                Exhibit 2:  [Description of Exhibit 2]  
-                Exhibit 3:  [Description of Exhibit 3]  
-                Exhibit 4:  [Description of Exhibit 4]  
-                Exhibit 5:  [Description of Exhibit 5]  
-                Exhibit 6:  [Description of Exhibit 6]  
-                Exhibit 7:  [Description of Exhibit 7]  
-                Exhibit 8:  [Description of Exhibit 8]  
-                Exhibit 9:  [Description of Exhibit 9]  
-                Exhibit 10: [Description of Exhibit 10]  
-                Exhibit 11: [Description of Exhibit 11]  
-                Exhibit 12: [Description of Exhibit 12]  
-                Exhibit 13: [Description of Exhibit 13]  
-                Exhibit 14: [Description of Exhibit 14]  
-                Exhibit 15: [Description of Exhibit 15]  
-                Exhibit 16: [Description of Exhibit 16]  
-                Exhibit 17: [Description of Exhibit 17]  
-                Exhibit 18: [Description of Exhibit 18]  
-                Exhibit 19: [Description of Exhibit 19]  
-                Exhibit 20: [Description of Exhibit 20]  
-                Exhibit 21: [Description of Exhibit 21]  
-                Exhibit 22: [Description of Exhibit 22]  
-                Exhibit 23: [Description of Exhibit 23]  
-                Exhibit 24: [Description of Exhibit 24]  
-                Exhibit 25: [Description of Exhibit 25]  
-                Exhibit 26: [Description of Exhibit 26]  
-                Exhibit 27: [Description of Exhibit 27]  
-                Exhibit 28: [Description of Exhibit 28]  
-                Exhibit 29: [Description of Exhibit 29]  
-                Exhibit 30: [Description of Exhibit 30]  
-                Exhibit 31: [Description of Exhibit 31]  
-                Exhibit 32: [Description of Exhibit 32]  
-                Exhibit 33: [Description of Exhibit 33]  
-                Exhibit 34: [Description of Exhibit 34]
+                **Petitioner:** [COMPANY NAME]  
+                **Beneficiary:** [BENEFICIARY’S NAME]
 
+                Pursuant to the United States-Mexico-Canada Agreement, a foreign national is entitled to enter the United States under the TN Status Visa category. Below is a complete list of supporting documents submitted to establish that **Mr. / Ms. [BENEFICIARY’S NAME]**, a citizen of **[Canada / Mexico]**, is qualified for the EB-1A Visa.
+
+                | **Exhibit 1** | **Forms & Fees** |
+                |---------------|------------------|
+                |               | 1.1 Cover Letter |
+                |               | 1.2 Form G-1450/G-1650 in the amount of **$[Amount]** |
+                |               | 1.3 Form G-1450/G-1650 in the amount of **$[Amount]** |
+                |               | 1.4 Form G-1450/G-1650 in the amount of **$[Amount]** |
+                |               | 1.5 Form G-28 “Notice of Entry of Appearance as Attorney” |
+                |               | 1.6 Form I-907 “Request for Premium Processing” |
+                |               | 1.7 Form I-129 + EB-1A I-140 with Sponsors Supplement “Petition for a Nonimmigrant Worker” |
+                | **Exhibit 2** | **Proof of Nationality & Lawful Stay in the U.S. and Dependents** |
+                |---------------|------------------------------------------------------------------|
+                |               | 2.1 [BENEFICIARY’S NAME] – Passport |
+                |               | 2.2 [BENEFICIARY’S NAME] – Previous Visa |
+                |               | 2.3 [BENEFICIARY’S NAME] – Birth Certificate |
+                |               | 2.4 [BENEFICIARY’S NAME] – Resume |
+                |               | 2.5 [BENEFICIARY’S NAME] – Educational Credentials |
+                |               | 2.6 [DEPENDENT SPOUSE NAME] – Passport |
+                |               | 2.7 [DEPENDENT SPOUSE NAME] – Marriage Certificate |
+                |               | 2.8 [DEPENDENT SPOUSE NAME] – Birth Certificate |
+                |               | 2.9 [CHILD NAME] – Passport |
+                |               | 2.10 [CHILD NAME] – Birth Certificate |
+                | **Exhibit 3** | **Support Letter** |
+                |---------------|--------------------|
+                |               | 3.1 [COMPANY NAME] – Letter in Support of the Beneficiary |
+                | **Exhibit 4** | **Applicant’s Educational Credentials** |
+                |---------------|-----------------------------------------|
+                |               | 4.1 Beneficiary’s Diploma |
+                |               | 4.2 Beneficiary’s Certifications |
+                |               | 4.3 Beneficiary’s Transcript of Records |
+                | **Exhibit 5** | **Applicant’s Work Experience** |
+                |---------------|---------------------------------|
+                |               | 5.1 Curriculum Vitae / Resume |
+                |               | 5.2 Certification of Employment |
+                |               | 5.3 Trainings |
+                | **Exhibit 6** | **Offer Letter with Summary of Terms** |
+                |---------------|----------------------------------------|
+                |               | 6.1 [COMPANY NAME] – Petitioner’s Job Offer |
+                | **Exhibit 7** | **Employer’s Background Information** |
+                |---------------|---------------------------------------|
+                |               | 7.1 Articles of Incorporation / Organization |
+                |               | 7.2 IRS – EIN Confirmation Number |
+                |               | 7.3 Company Activities |
+                |               | 7.4 Office Photos / Company Website |
+                | **Exhibit 8** | **Intent to Depart** |
+                |---------------|----------------------|
+                |               | 8.1 Beneficiary’s Declaration of Intent to Depart |
                 ```
                 step 3.While selecting data to fill in the placeholders, use only accurate and relevant information from the provided input file or files. If the required information is not available, leave the placeholder blank. Do not attempt to fill placeholders with incorrect or unrelated data.
                 Step 4.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
-                Step 5.In the "Supporting Evidence & Exhibits" section, list only the exhibits for which supporting documents are actually provided in the input. Do not list exhibits that are missing or not provided. Do not include any placeholders or blank entries for missing exhibits. 
-                Step 6.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
-                Step 7.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
-                Step 8.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
-                Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
+                Step 5.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
+                Step 6.Ensure the tone is professional and concise. Enclose the entire exhibit is within triple backticks like this: ``` Your Exhibit content here ```.               
                 """
             ),
         ),
@@ -660,10 +753,10 @@ def build_prompt_registry():
                        Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
 
                         """
-
             ),
         ),
         "Assessment Report": DocumentPrompt(
+            name="Assessment Report Agent", 
             template=(
                 rf"""
 
@@ -773,6 +866,7 @@ def build_prompt_registry():
             ),
         ),
         "Visa Application Summary Report": DocumentPrompt(
+            name="Visa Application Summary Report Agent",
             template=(
                 rf"""
                 Today’s date is {current_date}.
@@ -860,33 +954,119 @@ def build_prompt_registry():
 
 RETRIEVAL_HINTS = {
     "I-140 Cover Letter": [
-        "EB-1A",
-        "I-140",
-        "i-140",
-        "Form I-140",
-        "alien of extraordinary ability",
-        "g-1145",
-        "g-28-company",
-        "i-907",
-        "passport",
-        "visa-pages",
-        "birth-certificate",
-        "form-i-94",
-        "USCIS",
+        # Header block
+        "beneficiary full name",
+        "sponsor name employer petitioner",
+        "EB-1A extraordinary ability",
+        "I-140 petition",
+        "beneficiary country of citizenship nationality",
+        
+        # Beneficiary identity & pronoun
+        "beneficiary gender pronoun he she they",
+        "citizenship nationality passport",
+        
+        # Sponsor information
+        "sponsor company name employer",
+        "sponsor relationship to beneficiary",
+        "job offer from sponsor",
+        "sponsor support letter",
+        
+        # Field of expertise & classification
+        "field of expertise area of extraordinary ability",
+        "sustained national or international acclaim",
+        "one of the small percentage at the very top of the field",
+        
+        # Regulatory criteria
+        "awards prizes recognition",
+        "membership associations outstanding achievements",
+        "published material major media",
+        "original contributions major significance",
+        "scholarly articles publications citations",
+        "leading or critical role distinguished organizations",
+        "high salary remuneration",
+        "commercial success",
+        "judging the work of others",
+        
+        # Exhibits
+        "submitted exhibits list supporting documents",
+        
+        # Signature block
+        "attorney preparer name law firm name",
     ],
     "Support Letter": [
-        "EB-1A support letter",
-        "extraordinary ability",
-        "sustained acclaim",
-        "major significance",
-        "original contributions",
-        "all-degree-certs",
-        "degree-evidence",
-        "awards-recognition",
-        "publications",
-        "membership-in-org",
-        "media-reports",
-        "recommendation-letters",
+        # Document filenames
+        "sponsor support letter",
+        "expert recommendation letters",
+        "letters of recommendation expert opinion",
+        "resume curriculum vitae CV",
+        "degree certificate diploma transcript",
+        
+        # Sponsor & beneficiary
+        "sponsor company name employer",
+        "beneficiary full name",
+        "relationship between sponsor and beneficiary",
+        "job title position offered by sponsor",
+        
+        # Field of expertise
+        "field of expertise area of extraordinary ability",
+        "sustained national or international acclaim",
+        
+        # Criteria evidence
+        "awards prizes recognition",
+        "membership associations",
+        "published material major media",
+        "original contributions major significance",
+        "scholarly articles citations",
+        "leading or critical role",
+        "high salary remuneration",
+        "commercial success",
+        "judging the work of others",
+        
+        # Professional background
+        "professional experience career summary",
+        "key areas of expertise",
+        "publications citations patents awards",
+        
+        # Education
+        "degree major field of study university",
+        "transcript educational credentials",
+        
+        # Future work
+        "continued work in the field",
+        "work will benefit the United States",
+    ],
+    "Intent to Depart": [
+        # Header block
+        "beneficiary full name",
+        "sponsor name employer",
+        "EB-1A extraordinary ability",
+        "I-140 petition",
+        "beneficiary country of citizenship nationality",
+        
+        # Identity & country
+        "citizenship nationality country",
+        "passport biographical pages passport copy",
+        
+        # Field & future work
+        "field of expertise area of extraordinary ability",
+        "intend to continue work in the area of extraordinary ability",
+        "prospective work United States",
+        "work will benefit the United States",
+        
+        # Sponsor-related
+        "job offer from sponsor",
+        "position offered by sponsor",
+        "sponsor support",
+        
+        # Credentials
+        "degree certificate diploma transcript resume",
+        "beneficiary qualifications professional background",
+        "publications citations awards patents",
+        "letters of recommendation expert opinion",
+        
+        # Residence / ties
+        "foreign home address permanent residence",
+        "family ties property ownership",
     ],
     "Recommendation-Letter": [
         "recommendation letter",
@@ -1065,6 +1245,13 @@ def summarise_source_manifest(source_manifest: list[dict]) -> str:
     return "\n".join(lines) if lines else "- No source manifest available."
 
 
+def get_document_template(file_type: str) -> str:
+    prompt = build_prompt_registry().get(file_type)
+    if not prompt:
+        raise ValueError(f"No prompt found for document type: {file_type}")
+    return prompt.template.strip()
+
+
 def build_generation_prompt(file_type: str, retrieved_context, source_manifest: list[dict]) -> str:
     prompt_registry = build_prompt_registry()
     prompt = prompt_registry.get(file_type)
@@ -1078,8 +1265,8 @@ def build_generation_prompt(file_type: str, retrieved_context, source_manifest: 
             build_retrieved_case_record(retrieved_context),
             "# Source Manifest",
             summarise_source_manifest(source_manifest),
-            "# Additional Output Rules",
-            "Treat the template as a structural guide only; do not copy it verbatim.",
+            "# Additional Output Rules for all the genrated AI Doc",
+            "Treat the template as a structural guide only,copy it verbatim and structure.Output must match structure 100% NOTE : We are generating legal document so the below instruction must be put in followed",
             "Act like a lawyer: analyze the retrieved case record and the source manifest, then draft a document grounded in those materials.",
             "Use the retrieved case record as the primary source of factual support and the source manifest as supporting evidence.",
             "When a template field or placeholder is not directly available, look for equivalent or related evidence in the retrieved case record/source manifest and use that to fill the section.",
@@ -1087,6 +1274,44 @@ def build_generation_prompt(file_type: str, retrieved_context, source_manifest: 
             "Fill in every relevant section with facts supported by the retrieved case record or source manifest; if evidence is missing, leave the relevant content blank or mark it as [Not provided] rather than inventing facts.",
             "If key facts are missing, leave the relevant placeholders blank.",
             "Return only the final document enclosed in triple backticks.",
+            "# Placeholder Resolution Rules",
+            "Every bracketed placeholder and every slash-separated option (Mr. / Ms., he/she/his/her) must be resolved. No bracket, blank, or unresolved '/' option may remain in the final letter.",
+            "Fill names, dates, and facts only from the Retrieved Case Record. If a fact is not in the record, write [MISSING: <field name>] instead of leaving the placeholder or inventing a value.",
+            "Determine gender from the beneficiary's documents in the Retrieved Case Record and use one consistent form (Mr./Ms., he/she) throughout the letter. If gender cannot be determined, use the beneficiary's full name instead of a pronoun.",
+            "If the internal job title does not match a listed Appendix 2 profession, do not silently pick one — output [REVIEW: internal title does not match a listed TN profession].",
+            #"Before generating, confirm the beneficiary's citizenship is stated as Canadian or Mexican in the Retrieved Case Record. If citizenship is missing, unclear, or neither Canadian nor Mexican, stop and output only: [STOP: beneficiary citizenship not confirmed as Canadian or Mexican — TN classification requires this].",
+            "Duty bullets must use real Markdown bullet syntax, not bold placeholder lines. Populate only as many bullets as the case record supports — do not pad or truncate to reach a fixed number.",
+            "Degree and Major must be resolved separately. If no degree is found, use [MISSING: education credential] rather than leaving one field blank.",
+            "Before returning output, scan for any remaining '[', ']', or stray '/' characters not part of normal punctuation (e.g., dates). Resolve or tag each with [MISSING: ...] or [REVIEW: ...] before finalizing."
+            "# Exhibit Numbering Rule (NOTE: This rule do not apply to the actual exhibit list only file like cover, support letter etc)",
+            "Exhibit numbers must be taken ONLY from the (number of Source Manifest) of the file.",
+            #"NOTE: Do not use exhibit numbers from any example, template, or prior case use the exhibit you are provided.", 
+            #"NOTE: On the exhibit maintain the structure like in the template only the content should change(this means copy the structure not the content)",
+            "If a document type isn't in the Source Manifest, write [Exhibit — not provided] instead of guessing a number.",
+            "Rules for Exhibit:",
+            "Number exhibits sequentially starting from 1.",
+            "Only include exhibits that were actually provided.",
+            "Keep each description formal, concise, and on its own line.",
+            "When multiple forms/fees belong together, put them all under the same Exhibit number (as shown in Style B) and do not give them separate exhibit numbers.",
+            "Do not add bold, asterisks, extra spaces, or commentary.",
+            "Do not invent any forms, fees, or documents.",
+            "# Exhibit Numbering Rule and Format (NOTE: For exhibit only, this rule can over right the rules for all Doc)",
+            "Exhibit List Rule:",
+            "Strictly preserve the exact structure, numbering, formatting, and layout of the Exhibit List exactly as it appears in the template.Note this more",
+            "Only the content (document names, descriptions, amounts, or names) may change.",
+            "Do not change the heading style, table format, or the way exhibits are presented.",
+            "NOTE:The numbers should be in the file column (left) not in the exhibit number column(right)",
+            "No paragraph is allowed in the Exhibit file",
+            "It should be similar to the template provided in structure and layout that means treat the template as a structural guide only",
+            "# Job Duties Section Rule and Format (NOTE: For the Job Title/Duties section only, this rule can override the general rules for all Docs)",
+            "Duties must be pulled only from the beneficiary's Job Description (JD) file — not invented, summarized from unrelated exhibits, or copied from this template's example phrasing.",
+            "In the source JD, duties are not always under a section literally named 'Duties' — treat any of the following section headers as valid duty sources: 'Responsibilities', 'Key Responsibilities', 'Job Responsibilities', 'Duties and Responsibilities', 'Key Requirements', 'Requirements', 'Role Overview', 'Core Duties', 'Essential Functions', 'What You'll Do', 'Day-to-Day Activities', or an unlabeled bullet list directly under the job title.",
+            "Do not pull bullets from 'Qualifications', 'Requirements' sections that describe candidate skills/education rather than job tasks (e.g., 'Bachelor's degree required' is a qualification, not a duty) — only action-based bullets describing what the person does in the role count as duties.",
+            "Populate exactly as many bullets as the source JD supports — do not pad to reach 10 placeholder duties, and do not truncate real duties to fit fewer.",
+            "Each duty bullet must be real Markdown bullet syntax (leading '- '), not bold placeholder text like '[Duty 1 in bullet point]'.",
+            "If the JD file cannot be found or contains no duty-type content, output '[MISSING: job duties — no JD file found]' instead of generating generic or invented duties.",
+            "Treat the numbered '[Duty 1]' through '[Duty 10]' placeholders in the template as a structural guide only (i.e., 'duties go here as a list'), not as a required count or as literal content to preserve.",
+            "The job title must be the actual job title only (plain text, no brackets or placeholder formatting). It is not a placeholder and appears above the duties list."
         ]
     ).strip()
 

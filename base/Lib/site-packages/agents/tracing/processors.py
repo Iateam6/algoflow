@@ -11,9 +11,14 @@ from collections.abc import Callable
 from functools import cached_property
 from typing import Any, cast
 
-import httpx
+import httpx2
 
-from ..logger import logger
+from .. import _debug
+from ..logger import (
+    log_model_and_tool_action_error,
+    log_model_and_tool_action_warning,
+    logger,
+)
 from .processor_interface import TracingExporter, TracingProcessor
 from .spans import Span
 from .traces import Trace
@@ -24,6 +29,12 @@ class ConsoleSpanExporter(TracingExporter):
 
     def export(self, items: list[Trace | Span[Any]]) -> None:
         for item in items:
+            if _debug.DONT_LOG_MODEL_DATA or _debug.DONT_LOG_TOOL_DATA:
+                if isinstance(item, Trace):
+                    print("[Exporter] Export trace. Trace data is redacted.")
+                else:
+                    print("[Exporter] Export span. Span data is redacted.")
+                continue
             if isinstance(item, Trace):
                 print(f"[Exporter] Export trace_id={item.trace_id}, name={item.name}")
             else:
@@ -76,7 +87,7 @@ class BackendSpanExporter(TracingExporter):
         self._shutdown_event = threading.Event()
 
         # Keep a client open for connection pooling across multiple export calls
-        self._client = httpx.Client(timeout=httpx.Timeout(timeout=60, connect=5.0))
+        self._client = httpx2.Client(timeout=httpx2.Timeout(timeout=60, connect=5.0))
 
     def set_api_key(self, api_key: str):
         """Set the OpenAI API key for the exporter.
@@ -168,25 +179,33 @@ class BackendSpanExporter(TracingExporter):
 
                     # If the response is successful, break out of the loop
                     if response.status_code < 300:
-                        logger.debug(f"Exported {len(grouped)} items")
+                        logger.debug("Exported %s items", len(grouped))
                         break
 
                     # If the response is a client error (4xx), we won't retry
                     if 400 <= response.status_code < 500:
-                        logger.error(
-                            "[non-fatal] Tracing client error %s: %s",
-                            response.status_code,
-                            response.text,
-                        )
+                        if _debug.DONT_LOG_MODEL_DATA or _debug.DONT_LOG_TOOL_DATA:
+                            logger.error(
+                                "[non-fatal] Tracing client error %s. Response data is redacted.",
+                                response.status_code,
+                            )
+                        else:
+                            logger.error(
+                                "[non-fatal] Tracing client error %s: %s",
+                                response.status_code,
+                                response.text,
+                            )
                         break
 
                     # For 5xx or other unexpected codes, treat it as transient and retry
                     logger.warning(
-                        f"[non-fatal] Tracing: server error {response.status_code}, retrying."
+                        "[non-fatal] Tracing: server error %s, retrying.", response.status_code
                     )
-                except httpx.RequestError as exc:
+                except httpx2.RequestError as exc:
                     # Network or other I/O error, we'll retry
-                    logger.warning(f"[non-fatal] Tracing: request failed: {exc}")
+                    log_model_and_tool_action_warning(
+                        logger, "[non-fatal] Tracing request failed", exc
+                    )
 
                 # If we reach here, we need to retry or give up
                 if attempt >= self.max_retries:
@@ -201,7 +220,7 @@ class BackendSpanExporter(TracingExporter):
                     break
                 delay = min(delay * 2, self.max_delay)
 
-    def _timeout_for_deadline(self, deadline: float | None) -> httpx.Timeout | None:
+    def _timeout_for_deadline(self, deadline: float | None) -> httpx2.Timeout | None:
         if deadline is None:
             return None
 
@@ -210,7 +229,7 @@ class BackendSpanExporter(TracingExporter):
             return None
 
         connect_timeout = min(5.0, remaining)
-        return httpx.Timeout(remaining, connect=connect_timeout)
+        return httpx2.Timeout(remaining, connect=connect_timeout)
 
     def _sleep_before_retry(self, sleep_time: float, deadline: float | None) -> bool:
         if deadline is None:
@@ -554,7 +573,7 @@ class BatchTraceProcessor(TracingProcessor):
         self._export_trigger_size = max(1, int(max_queue_size * export_trigger_ratio))
 
         # Track when we next *must* perform a scheduled export
-        self._next_export_time = time.time() + self._schedule_delay
+        self._next_export_time = time.monotonic() + self._schedule_delay
 
         # We lazily start the background worker thread the first time a span/trace is queued.
         self._worker_thread: threading.Thread | None = None
@@ -623,34 +642,34 @@ class BatchTraceProcessor(TracingProcessor):
                 )
         else:
             # No background thread: process any remaining items synchronously.
-            self._export_batches(force=True, deadline=deadline)
+            self._export_batches(deadline=deadline)
 
     def force_flush(self):
         """
         Forces an immediate flush of all queued spans.
         """
-        self._export_batches(force=True)
+        self._export_batches()
 
     def _run(self):
         while not self._shutdown_event.is_set():
-            current_time = time.time()
+            current_time = time.monotonic()
             queue_size = self._queue.qsize()
 
             # If it's time for a scheduled flush or queue is above the trigger threshold
             if current_time >= self._next_export_time or queue_size >= self._export_trigger_size:
-                self._export_batches(force=False)
+                self._export_batches()
                 # Reset the next scheduled flush time
-                self._next_export_time = time.time() + self._schedule_delay
+                self._next_export_time = time.monotonic() + self._schedule_delay
             else:
                 # Sleep a short interval so we don't busy-wait.
                 time.sleep(0.2)
 
         # Final drain after shutdown
-        self._export_batches(force=True, deadline=self._shutdown_deadline)
+        self._export_batches(deadline=self._shutdown_deadline)
 
-    def _export_batches(self, force: bool = False, deadline: float | None = None):
-        """Drains the queue and exports in batches. If force=True, export everything.
-        Otherwise, export up to `max_batch_size` repeatedly until the queue is completely empty.
+    def _export_batches(self, deadline: float | None = None):
+        """Drains the queue and exports in batches of up to `max_batch_size` until the queue
+        is completely empty.
         """
         with self._export_lock:
             while True:
@@ -663,9 +682,7 @@ class BatchTraceProcessor(TracingProcessor):
                 items_to_export: list[Span[Any] | Trace] = []
 
                 # Gather a batch of spans up to max_batch_size
-                while not self._queue.empty() and (
-                    force or len(items_to_export) < self._max_batch_size
-                ):
+                while not self._queue.empty() and len(items_to_export) < self._max_batch_size:
                     try:
                         items_to_export.append(self._queue.get_nowait())
                     except queue.Empty:
@@ -690,10 +707,13 @@ class BatchTraceProcessor(TracingProcessor):
                     else:
                         self._exporter.export(items_to_export)
                 except Exception as exc:
-                    logger.error(
-                        "[non-fatal] Tracing: exporter raised %s; dropping batch of %d items",
+                    log_model_and_tool_action_error(
+                        logger,
+                        (
+                            "[non-fatal] Tracing exporter failed; "
+                            f"dropping batch of {len(items_to_export)} items"
+                        ),
                         exc,
-                        len(items_to_export),
                     )
 
 

@@ -12,6 +12,8 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
+    libmagic1 \
+    redis-server \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
@@ -22,8 +24,12 @@ RUN pip install -r requirements.txt
 # Copy project files
 COPY . .
 
+RUN sed -i 's/\r$//' /app/docker/entrypoint.sh \
+    && chmod +x /app/docker/entrypoint.sh
+
 # Expose port
-EXPOSE 8098
+EXPOSE 8999
 
 # Start with Uvicorn (ASGI server for Django async support)
-CMD ["uvicorn", "immigration_algoflow_APIs.asgi:application", "--host", "0.0.0.0", "--port", "8098"]
+ENTRYPOINT ["/app/docker/entrypoint.sh"]
+CMD ["supervisord", "-c", "/app/docker/supervisord.conf"]

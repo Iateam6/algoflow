@@ -3,7 +3,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 
-from .openai_client import get_openai_client
+from case_jobs.integrations.openai_client import get_openai_client
 
 
 logger = logging.getLogger(__name__)
@@ -112,54 +112,65 @@ def build_prompt_registry():
                         - Supplemental financial documents uploaded to CEAC
                 **Step 2**: Use the following structure for the letter:
                 ``` 
-                                                   Exhibit List  
-                                    Self-Petitioner: [Beneficiary’s Full Name]  
-                                    Position: [Beneficiary’s Position/Title]  
+                **List of Supporting Documents**  
+                **DS-260 Visa Application**
 
-                Exhibit 1:  [Description of Exhibit 1]  
-                Exhibit 2:  [Description of Exhibit 2]  
-                Exhibit 3:  [Description of Exhibit 3]  
-                Exhibit 4:  [Description of Exhibit 4]  
-                Exhibit 5:  [Description of Exhibit 5]  
-                Exhibit 6:  [Description of Exhibit 6]  
-                Exhibit 7:  [Description of Exhibit 7]  
-                Exhibit 8:  [Description of Exhibit 8]  
-                Exhibit 9:  [Description of Exhibit 9]  
-                Exhibit 10: [Description of Exhibit 10]  
-                Exhibit 11: [Description of Exhibit 11]  
-                Exhibit 12: [Description of Exhibit 12]  
-                Exhibit 13: [Description of Exhibit 13]  
-                Exhibit 14: [Description of Exhibit 14]  
-                Exhibit 15: [Description of Exhibit 15]  
-                Exhibit 16: [Description of Exhibit 16]  
-                Exhibit 17: [Description of Exhibit 17]  
-                Exhibit 18: [Description of Exhibit 18]  
-                Exhibit 19: [Description of Exhibit 19]  
-                Exhibit 20: [Description of Exhibit 20]  
-                Exhibit 21: [Description of Exhibit 21]  
-                Exhibit 22: [Description of Exhibit 22]  
-                Exhibit 23: [Description of Exhibit 23]  
-                Exhibit 24: [Description of Exhibit 24]  
-                Exhibit 25: [Description of Exhibit 25]  
-                Exhibit 26: [Description of Exhibit 26]  
-                Exhibit 27: [Description of Exhibit 27]  
-                Exhibit 28: [Description of Exhibit 28]  
-                Exhibit 29: [Description of Exhibit 29]  
-                Exhibit 30: [Description of Exhibit 30]  
-                Exhibit 31: [Description of Exhibit 31]  
-                Exhibit 32: [Description of Exhibit 32]  
-                Exhibit 33: [Description of Exhibit 33]  
-                Exhibit 34: [Description of Exhibit 34]  
-                
+                **Petitioner:** [COMPANY NAME]  
+                **Beneficiary:** [BENEFICIARY’S NAME]
+
+                Pursuant to the United States-Mexico-Canada Agreement, a foreign national is entitled to enter the United States under the DS-260 Status Visa category. Below is a complete list of supporting documents submitted to establish that **Mr. / Ms. [BENEFICIARY’S NAME]**, a citizen of **[Canada / Mexico]**, is qualified for the DS-260 Visa.
+
+                | **Exhibit 1** | **Forms & Fees** |
+                |---------------|------------------|
+                |               | 1.1 Cover Letter |
+                |               | 1.2 Form G-1450/G-1650 in the amount of **$[Amount]** |
+                |               | 1.3 Form G-1450/G-1650 in the amount of **$[Amount]** |
+                |               | 1.4 Form G-1450/G-1650 in the amount of **$[Amount]** |
+                |               | 1.5 Form G-28 “Notice of Entry of Appearance as Attorney” |
+                |               | 1.6 Form I-907 “Request for Premium Processing” |
+                |               | 1.7 Form I-129 + DS-260 Supplement “Petition for a Nonimmigrant Worker” |
+                | **Exhibit 2** | **Proof of Nationality & Lawful Stay in the U.S. and Dependents** |
+                |---------------|------------------------------------------------------------------|
+                |               | 2.1 [BENEFICIARY’S NAME] – Passport |
+                |               | 2.2 [BENEFICIARY’S NAME] – Previous Visa |
+                |               | 2.3 [BENEFICIARY’S NAME] – Birth Certificate |
+                |               | 2.4 [BENEFICIARY’S NAME] – Resume |
+                |               | 2.5 [BENEFICIARY’S NAME] – Educational Credentials |
+                |               | 2.6 [DEPENDENT SPOUSE NAME] – Passport |
+                |               | 2.7 [DEPENDENT SPOUSE NAME] – Marriage Certificate |
+                |               | 2.8 [DEPENDENT SPOUSE NAME] – Birth Certificate |
+                |               | 2.9 [CHILD NAME] – Passport |
+                |               | 2.10 [CHILD NAME] – Birth Certificate |
+                | **Exhibit 3** | **Support Letter** |
+                |---------------|--------------------|
+                |               | 3.1 [COMPANY NAME] – Letter in Support of the Beneficiary |
+                | **Exhibit 4** | **Applicant’s Educational Credentials** |
+                |---------------|-----------------------------------------|
+                |               | 4.1 Beneficiary’s Diploma |
+                |               | 4.2 Beneficiary’s Certifications |
+                |               | 4.3 Beneficiary’s Transcript of Records |
+                | **Exhibit 5** | **Applicant’s Work Experience** |
+                |---------------|---------------------------------|
+                |               | 5.1 Curriculum Vitae / Resume |
+                |               | 5.2 Certification of Employment |
+                |               | 5.3 Trainings |
+                | **Exhibit 6** | **Offer Letter with Summary of Terms** |
+                |---------------|----------------------------------------|
+                |               | 6.1 [COMPANY NAME] – Petitioner’s Job Offer |
+                | **Exhibit 7** | **Employer’s Background Information** |
+                |---------------|---------------------------------------|
+                |               | 7.1 Articles of Incorporation / Organization |
+                |               | 7.2 IRS – EIN Confirmation Number |
+                |               | 7.3 Company Activities |
+                |               | 7.4 Office Photos / Company Website |
+                | **Exhibit 8** | **Intent to Depart** |
+                |---------------|----------------------|
+                |               | 8.1 Beneficiary’s Declaration of Intent to Depart |
                 ```
                 step 3.While selecting data to fill in the placeholders, use only accurate and relevant information from the provided input file or files. If the required information is not available, leave the placeholder blank. Do not attempt to fill placeholders with incorrect or unrelated data.
                 Step 4.Adopt a professional, concise, firm tone—polite but unequivocal—avoiding needless legalese.
-                Step 5.In the "Supporting Evidence & Exhibits" section, list only the exhibits for which supporting documents are actually provided in the input. Do not list exhibits that are missing or not provided. Do not include any placeholders or blank entries for missing exhibits. 
-                Step 6.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
-                Step 7.Ensure the tone is professional and concise. Enclose the entire letter within triple backticks like this: ``` Your letter content here ```.
-                Step 8.Each and every point should be elaborated in detail in about 100 words and don't leave section of the letter out it it a legal file.
-                Step 9.Leave the back‐slashed underscores exactly as written—do not remove the backslashes.
-
+                Step 5.Output raw Markdown only: use headings (`#`, `##`, `###`), bold for labels, lists for items, and blank lines for paragraphs. Do not wrap in backticks or code fences—just feed it straight to Pandoc.
+                Step 6.Ensure the tone is professional and concise. Enclose the entire exhibit is within triple backticks like this: ``` Your Exhibit content here ```.               
                 """
             ),           
         ),
@@ -511,6 +522,13 @@ def summarise_source_manifest(source_manifest: list[dict]) -> str:
     return "\n".join(lines) if lines else "- No source manifest available."
 
 
+def get_document_template(file_type: str) -> str:
+    prompt = build_prompt_registry().get(file_type)
+    if not prompt:
+        raise ValueError(f"No prompt found for document type: {file_type}")
+    return prompt.template.strip()
+
+
 def build_generation_prompt(file_type: str, retrieved_context, source_manifest: list[dict]) -> str:
     prompt_registry = build_prompt_registry()
     prompt = prompt_registry.get(file_type)
@@ -524,8 +542,8 @@ def build_generation_prompt(file_type: str, retrieved_context, source_manifest: 
             build_retrieved_case_record(retrieved_context),
             "# Source Manifest",
             summarise_source_manifest(source_manifest),
-            "# Additional Output Rules",
-            "Treat the template as a structural guide only; do not copy it verbatim.",
+            "# Additional Output Rules for all the genrated AI Doc",
+            "Treat the template as a structural guide only,copy it verbatim and structure.Output must match structure 100% NOTE : We are generating legal document so the below instruction must be put in followed",
             "Act like a lawyer: analyze the retrieved case record and the source manifest, then draft a document grounded in those materials.",
             "Use the retrieved case record as the primary source of factual support and the source manifest as supporting evidence.",
             "When a template field or placeholder is not directly available, look for equivalent or related evidence in the retrieved case record/source manifest and use that to fill the section.",
@@ -533,6 +551,44 @@ def build_generation_prompt(file_type: str, retrieved_context, source_manifest: 
             "Fill in every relevant section with facts supported by the retrieved case record or source manifest; if evidence is missing, leave the relevant content blank or mark it as [Not provided] rather than inventing facts.",
             "If key facts are missing, leave the relevant placeholders blank.",
             "Return only the final document enclosed in triple backticks.",
+            "# Placeholder Resolution Rules",
+            "Every bracketed placeholder and every slash-separated option (Mr. / Ms., he/she/his/her) must be resolved. No bracket, blank, or unresolved '/' option may remain in the final letter.",
+            "Fill names, dates, and facts only from the Retrieved Case Record. If a fact is not in the record, write [MISSING: <field name>] instead of leaving the placeholder or inventing a value.",
+            "Determine gender from the beneficiary's documents in the Retrieved Case Record and use one consistent form (Mr./Ms., he/she) throughout the letter. If gender cannot be determined, use the beneficiary's full name instead of a pronoun.",
+            "If the internal job title does not match a listed Appendix 2 profession, do not silently pick one — output [REVIEW: internal title does not match a listed TN profession].",
+            #"Before generating, confirm the beneficiary's citizenship is stated as Canadian or Mexican in the Retrieved Case Record. If citizenship is missing, unclear, or neither Canadian nor Mexican, stop and output only: [STOP: beneficiary citizenship not confirmed as Canadian or Mexican — TN classification requires this].",
+            "Duty bullets must use real Markdown bullet syntax, not bold placeholder lines. Populate only as many bullets as the case record supports — do not pad or truncate to reach a fixed number.",
+            "Degree and Major must be resolved separately. If no degree is found, use [MISSING: education credential] rather than leaving one field blank.",
+            "Before returning output, scan for any remaining '[', ']', or stray '/' characters not part of normal punctuation (e.g., dates). Resolve or tag each with [MISSING: ...] or [REVIEW: ...] before finalizing."
+            "# Exhibit Numbering Rule (NOTE: This rule do not apply to the actual exhibit list only file like cover, support letter etc)",
+            "Exhibit numbers must be taken ONLY from the (number of Source Manifest) of the file.",
+            #"NOTE: Do not use exhibit numbers from any example, template, or prior case use the exhibit you are provided.", 
+            #"NOTE: On the exhibit maintain the structure like in the template only the content should change(this means copy the structure not the content)",
+            "If a document type isn't in the Source Manifest, write [Exhibit — not provided] instead of guessing a number.",
+            "Rules for Exhibit:",
+            "Number exhibits sequentially starting from 1.",
+            "Only include exhibits that were actually provided.",
+            "Keep each description formal, concise, and on its own line.",
+            "When multiple forms/fees belong together, put them all under the same Exhibit number (as shown in Style B) and do not give them separate exhibit numbers.",
+            "Do not add bold, asterisks, extra spaces, or commentary.",
+            "Do not invent any forms, fees, or documents.",
+            "# Exhibit Numbering Rule and Format (NOTE: For exhibit only, this rule can over right the rules for all Doc)",
+            "Exhibit List Rule:",
+            "Strictly preserve the exact structure, numbering, formatting, and layout of the Exhibit List exactly as it appears in the template.Note this more",
+            "Only the content (document names, descriptions, amounts, or names) may change.",
+            "Do not change the heading style, table format, or the way exhibits are presented.",
+            "NOTE:The numbers should be in the file column (left) not in the exhibit number column(right)",
+            "No paragraph is allowed in the Exhibit file",
+            "It should be similar to the template provided in structure and layout that means treat the template as a structural guide only",
+            "# Job Duties Section Rule and Format (NOTE: For the Job Title/Duties section only, this rule can override the general rules for all Docs)",
+            "Duties must be pulled only from the beneficiary's Job Description (JD) file — not invented, summarized from unrelated exhibits, or copied from this template's example phrasing.",
+            "In the source JD, duties are not always under a section literally named 'Duties' — treat any of the following section headers as valid duty sources: 'Responsibilities', 'Key Responsibilities', 'Job Responsibilities', 'Duties and Responsibilities', 'Key Requirements', 'Requirements', 'Role Overview', 'Core Duties', 'Essential Functions', 'What You'll Do', 'Day-to-Day Activities', or an unlabeled bullet list directly under the job title.",
+            "Do not pull bullets from 'Qualifications', 'Requirements' sections that describe candidate skills/education rather than job tasks (e.g., 'Bachelor's degree required' is a qualification, not a duty) — only action-based bullets describing what the person does in the role count as duties.",
+            "Populate exactly as many bullets as the source JD supports — do not pad to reach 10 placeholder duties, and do not truncate real duties to fit fewer.",
+            "Each duty bullet must be real Markdown bullet syntax (leading '- '), not bold placeholder text like '[Duty 1 in bullet point]'.",
+            "If the JD file cannot be found or contains no duty-type content, output '[MISSING: job duties — no JD file found]' instead of generating generic or invented duties.",
+            "Treat the numbered '[Duty 1]' through '[Duty 10]' placeholders in the template as a structural guide only (i.e., 'duties go here as a list'), not as a required count or as literal content to preserve.",
+            "The job title must be the actual job title only (plain text, no brackets or placeholder formatting). It is not a placeholder and appears above the duties list."
         ]
     ).strip()
 

@@ -1,0 +1,16 @@
+.git
+.github
+.agents
+.codex
+.env
+.env.*
+!.env.example
+base/
+media/
+generated/
+staticfiles/
+__pycache__/
+*.py[cod]
+*.log
+.pytest_cache/
+.mypy_cache/
