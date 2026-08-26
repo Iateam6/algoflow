@@ -28,7 +28,7 @@ RUN sed -i 's/\r$//' /app/docker/entrypoint.sh \
     && chmod +x /app/docker/entrypoint.sh
 
 # Expose port
-EXPOSE 8999
+EXPOSE 8098
 
 # Start with Uvicorn (ASGI server for Django async support)
 ENTRYPOINT ["/app/docker/entrypoint.sh"]

@@ -144,7 +144,7 @@ STATIC_URL = "static/"
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-PUBLIC_BASE_URL = env.str("PUBLIC_BASE_URL", default="https://algoflow.visa26.com")
+PUBLIC_BASE_URL = env.str("PUBLIC_BASE_URL", default="http://127.0.0.1:8000")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

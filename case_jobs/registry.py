@@ -153,12 +153,12 @@ def _normalize_visa_type(visa_type: str) -> str:
     compact_aliases = {
         "aap": "aap",
         "aea": "aea",
-        "ds_160": "ds-160",
-        "ds_260": "ds-260",
-        "eb_1aA": "eb-1a-a",
-        "eb_1aB": "eb-1a-b",
+        "ds-160": "ds-160",
+        "ds-260": "ds-260",
+        "eb-1a-a": "eb-1aa",
+        "eb-1a-b": "eb-1ab",
         "naturalization": "n-400",
-        "reentry_permit": "r-1",
+        "reentry-permit": "r-1",
     }
     return compact_aliases.get(key, key)
 

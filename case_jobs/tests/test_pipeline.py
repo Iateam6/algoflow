@@ -90,7 +90,7 @@ class PipelineTests(SimpleTestCase):
         queue_webhook.assert_called_once()
 
     def test_public_generation_route_is_registered(self):
-        match = resolve("/api/eb-1a/generate_doc/")
+        match = resolve("/api/eb-1aA/generate_doc/")
         self.assertEqual(match.url_name, "create_generation")
 
     @override_settings(
@@ -137,6 +137,26 @@ class PipelineTests(SimpleTestCase):
                 "/api/tn/generate_doc/00000000-0000-0000-0000-000000000000/download/"
             )
         )
+
+    @override_settings(PUBLIC_BASE_URL="", WEBHOOK_ROOT_URL="")
+    def test_job_download_urls_use_the_registered_public_visa_routes(self):
+        expected_segments = {
+            "aap": "aap",
+            "aea": "aea",
+            "ds-160": "ds-160",
+            "ds-260": "ds-260",
+            "eb-1aA": "eb-1aA",
+            "eb-1aB": "eb-1aB",
+            "n-400": "naturalization",
+            "r-1": "reentry-permit",
+        }
+
+        for visa_type, segment in expected_segments.items():
+            with self.subTest(visa_type=visa_type):
+                self.assertEqual(
+                    _job_download_url(visa_type=visa_type, job_id="job-id"),
+                    f"/api/{segment}/generate_doc/job-id/download/",
+                )
 
     def test_redis_urls_do_not_include_kombu_incompatible_protocol_query(self):
         self.assertEqual(

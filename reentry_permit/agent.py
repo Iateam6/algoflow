@@ -4,11 +4,12 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from case_jobs.integrations.openai_client import get_openai_client
+from case_jobs.pipeline.prompt_contract import build_legal_drafting_contract, prepare_template_for_generation
 
 
 logger = logging.getLogger(__name__)
 
-GENERATION_MODEL = "o3-mini"
+GENERATION_MODEL = "gpt-5.6"
 
 
 @dataclass(frozen=True)
@@ -991,47 +992,76 @@ def deduplicate_retrieved_context(retrieved_context) -> list:
 
 
 def build_retrieved_case_record(retrieved_context) -> str:
+    print("\n" + "=" * 100)
+    print("RETRIEVED CASE RECORD DEBUG INFO")
+    print("=" * 100)
+    print(f"Total chunks included: {len(retrieved_context)}\n")
+    
     sections = []
-    for index, document in enumerate(deduplicate_retrieved_context(retrieved_context), start=1):
+    for index, document in enumerate(retrieved_context, start=1):
         metadata = getattr(document, "metadata", {}) or {}
-        sections.append(
-            "\n".join(
-                [
-                    f"### Retrieved Chunk {index}",
-                    f"- Source: {metadata.get('source_name', 'unknown')}",
-                    f"- Category: {metadata.get('source_category', 'unknown')}",
-                    f"- Page: {metadata.get('page_number', 'unknown')}",
-                    f"- Chunk: {metadata.get('chunk_index', 'unknown')}",
-                    f"- Extraction mode: {metadata.get('extraction_mode', 'unknown')}",
-                    document.page_content.strip(),
-                ]
-            ).strip()
-        )
+        chunk_text = document.page_content.strip()
+        chunk_section = "\n".join(
+            [
+                f"### Retrieved Chunk {index}",
+                f"- File: {metadata.get('source_name', 'unknown')}",
+                chunk_text,
+            ]
+        ).strip()
+        sections.append(chunk_section)
+        
+        # Print chunk info
+        print(f"[Chunk {index}]")
+        print(f"  File: {metadata.get('source_name', 'unknown')}")
+        print(f"  Content length: {len(chunk_text)} characters")
+        print(f"  Content preview (first 200 chars): {chunk_text[:200]}...")
+        print(f"  Full content:\n{chunk_text}")
+        print("-" * 100)
+        
+        # Log each chunk
+        logger.info("Chunk %d | File: %s | Length: %d chars",
+                     index,
+                     metadata.get('source_name', 'unknown'),
+                     len(chunk_text))
 
     if not sections:
+        print("No retrieved case record was available.")
+        print("=" * 100 + "\n")
         return "No retrieved case record was available."
 
-    return "\n\n".join(sections)
+    result = "\n\n".join(sections)
+    print(f"Total Retrieved Case Record length: {len(result)} characters")
+    print("=" * 100 + "\n")
+    return result
 
 
 def summarise_source_manifest(source_manifest: list[dict]) -> str:
+    print("\n" + "=" * 100)
+    print("SOURCE MANIFEST DEBUG INFO")
+    print("=" * 100)
+    print(f"Total files in manifest: {len(source_manifest)}")
+    
     lines = []
-    for entry in source_manifest:
-        lines.append(
-            "\n".join(
-                [
-                    f"- Source name: {entry.get('original_filename', 'unknown')}",
-                    f"  Category: {entry.get('name', 'unknown')}",
-                    f"  File hash: {entry.get('file_hash', 'unknown')}",
-                    f"  Extension: {entry.get('extension', 'unknown')}",
-                    f"  MIME type: {entry.get('content_type', 'unknown')}",
-                    f"  Extraction mode: {entry.get('extraction_mode', 'unknown')}",
-                    f"  Pages: {entry.get('page_count', 'unknown')}",
-                ]
-            )
+    for idx, entry in enumerate(source_manifest, start=1):
+        manifest_entry = "\n".join(
+            [
+                f"- Source name: {entry.get('original_filename', 'unknown')}",
+                f"  Category: {entry.get('name', 'unknown')}",
+                f"  File hash: {entry.get('file_hash', 'unknown')}",
+                f"  Extension: {entry.get('extension', 'unknown')}",
+                f"  MIME type: {entry.get('content_type', 'unknown')}",
+                f"  Extraction mode: {entry.get('extraction_mode', 'unknown')}",
+                f"  Pages: {entry.get('page_count', 'unknown')}",
+            ]
         )
-
-    return "\n".join(lines) if lines else "- No source manifest available."
+        lines.append(manifest_entry)
+        print(f"\nFile {idx}:")
+        print(manifest_entry)
+    
+    print("=" * 100 + "\n")
+    result = "\n".join(lines) if lines else "- No source manifest available."
+    logger.info("Source Manifest Summary:\n%s", result)
+    return result
 
 
 def get_document_template(file_type: str) -> str:
@@ -1042,35 +1072,130 @@ def get_document_template(file_type: str) -> str:
 
 
 def build_generation_prompt(file_type: str, retrieved_context, source_manifest: list[dict]) -> str:
+    print("\n" + "=" * 100)
+    print("BUILDING GENERATION PROMPT")
+    print("=" * 100)
+    print(f"Document Type: {file_type}")
+    print(f"Total retrieved context chunks: {len(retrieved_context)}")
+    print("=" * 100 + "\n")
+    
+    logger.info("Building generation prompt for: %s", file_type)
+    logger.info("Total retrieved context chunks: %d", len(retrieved_context))
+    
     prompt_registry = build_prompt_registry()
     prompt = prompt_registry.get(file_type)
     if not prompt:
         raise ValueError(f"No prompt found for document type: {file_type}")
 
-    return "\n\n".join(
-        [ 
-            prompt.template.strip(),
-            "# Retrieved Case Record",
-            build_retrieved_case_record(retrieved_context),
-            "# Source Manifest",
-            summarise_source_manifest(source_manifest),
-            "# Additional Output Rules",
-            "Treat the template as a structural guide only; do not copy it verbatim.",
-            "Act like a lawyer: analyze the retrieved case record and the source manifest, then draft a document grounded in those materials.",
-            "Use the retrieved case record as the primary source of factual support and the source manifest as supporting evidence.",
-            "When a template field or placeholder is not directly available, look for equivalent or related evidence in the retrieved case record/source manifest and use that to fill the section.",
-            "For example, if the template asks for 'petitioner' or 'employer' and the case record uses a different but equivalent term, use the correct party from the evidence.",
-            "Fill in every relevant section with facts supported by the retrieved case record or source manifest; if evidence is missing, leave the relevant content blank or mark it as [Not provided] rather than inventing facts.",
-            "If key facts are missing, leave the relevant placeholders blank.",
-            "Return only the final document enclosed in triple backticks.",
-        ]
-    ).strip()
+    # Build each section with debugging
+    print("[1/5] Building template section...")
+    template_section = prepare_template_for_generation(prompt.template)
+    print(f"✓ Template length: {len(template_section)} characters\n")
+    
+    print("[2/5] Building retrieved case record section...")
+    case_record_section = build_retrieved_case_record(retrieved_context)
+    print(f"✓ Case record length: {len(case_record_section)} characters\n")
+    
+    print("[3/5] Building legal drafting contract section...")
+    legal_contract = build_legal_drafting_contract()
+    print(f"✓ Legal contract length: {len(legal_contract)} characters\n")
+    
+    print("[4/5] Building output rules section...")
+    output_rules = "\n".join([
+        "# Additional Output Rules for all the genrated AI Doc",
+        "Do not provide ideas on how to write the document; only generate the document itself.",
+        "Critical rule accuracy: Do not invent any facts or details more so in the exhibit and the context should short just like the template.",
+        "Common section headings and subheadings are provided in the template; do not invent new headings or subheadings (should remain the same should not change) so stop adding Employer Address or Beneficiary Address and this sentence **Enclosed, please find the following materials in support of this application:** should be constant .",
+        "If the EB-1A profession category use field of study intead of job title and if the job title is not listed in the Appendix 2, use the field of study instead of job title.",
+        "Treat the template as a structural guide only; follow its structure and paragraph flow, but replace all example content with details specific to the current visa application. Match the template's approximate length and word count per section — do not condense, summarize, or expand paragraphs beyond what the template's structure implies. The output should read as a complete, single-page letter, mirroring the template's proportions (e.g., a 3-sentence duties description stays 2-3 sentences, not 1 or 5; a 4-paragraph body stays 4 paragraphs, not 2 or 6).",
+        "Act like a lawyer: analyze the complete retrieved case record, then draft a document grounded in those materials.",
+        "Act like a lawyer: analyze the complete retrieved case record, then draft a document grounded in those materials.",
+        "Use the retrieved case record as the source of factual support.",
+        "When a template field or placeholder is not directly available, look for equivalent or related evidence in the retrieved case record and use that to fill the section.",
+        "For example, if the template asks for 'petitioner' or 'employer' and the case record uses a different but equivalent term, use the correct party from the evidence.",
+        "Fill every relevant section only with supported facts; use [MISSING: field name] when required evidence is unavailable.",
+        "Never leave a required field blank and never invent a replacement value.",
+        "Return only the final document enclosed in triple backticks.",
+        "# Placeholder Resolution Rules",
+        "Every bracketed placeholder and every slash-separated option (Mr. / Ms., he/she/his/her) must be resolved. No bracket, blank, or unresolved '/' option may remain in the final letter.",
+        "Fill names, dates, and facts only from the Retrieved Case Record. If a fact is not in the record, write [MISSING: <field name>] instead of leaving the placeholder or inventing a value.",
+        "Determine gender from the beneficiary's documents in the Retrieved Case Record and use one consistent form (Mr./Ms., he/she) throughout the letter. If gender cannot be determined, use the beneficiary's full name instead of a pronoun.",
+        # "If the internal job title does not match a listed Appendix 2 profession, do not silently pick one — output [REVIEW: internal title does not match a listed TN profession].",
+        "Duty bullets must use real Markdown bullet syntax, not bold placeholder lines. Populate only as many bullets as the case record supports — do not pad or truncate to reach a fixed number.",
+        # "Degree and Major must be resolved separately. If no degree is found, use [MISSING: education credential] rather than leaving one field blank.",
+        # "Before returning output, scan for any remaining '[', ']', or stray '/' characters not part of normal punctuation (e.g., dates). Resolve or tag each with [MISSING: ...] or [REVIEW: ...] before finalizing."
+        "# Exhibit Numbering Rule (NOTE: This rule do not apply to the actual exhibit list only cover letter)",
+        "Do not change the order or the number of the exhibits you are provided when generating the exhibit list section in the cover leter ,if its Exhibit 1 to Exhibit 4 do not make to 5 or 7, but use it to reference the exhibits.",
+        "Use the provided exhibit list example to show you the tone and style/format to generate the exhibit list SECTION in the cover letter (NOTE: Do not change the order of exhibit you are providing).",
+        "Do not use `- or ·` hyphenate, bullet or number the exhibit list.",
+        "#Exhibit List Rule:",
+        "Strictly preserve the exact structure, numbering, formatting, and layout of the Exhibit List exactly as it appears in the template.Note this more",
+        "Only the content (document names, descriptions, amounts, or names) may change.",
+        "Do not change the heading style, table format, or the way exhibits are presented.",
+        "NOTE:The numbers should be in the file column (left) not in the exhibit number column(right)",
+        "No paragraph is allowed in the Exhibit file",
+        "It should be similar to the template provided in structure and layout that means treat the template as a structural guide only",
+        "# Job Duties Section Rule and Format (NOTE: For the Job Title/Duties section only, this rule can override the general rules for all Docs)",
+        "Duties must be pulled only from the beneficiary's Job Description (JD) file — not invented, summarized from unrelated exhibits, or copied from this template's example phrasing.",
+        "In the source JD, duties are not always under a section literally named 'Duties' — treat any of the following section headers as valid duty sources: 'Responsibilities', 'Key Responsibilities', 'Job Responsibilities', 'Duties and Responsibilities', 'Key Requirements', 'Requirements', 'Role Overview', 'Core Duties', 'Essential Functions', 'What You'll Do', 'Day-to-Day Activities', or an unlabeled bullet list directly under the job title.",
+        "Do not pull bullets from 'Qualifications', 'Requirements' sections that describe candidate skills/education rather than job tasks (e.g., 'Bachelor's degree required' is a qualification, not a duty) — only action-based bullets describing what the person does in the role count as duties.",
+        "Populate exactly as many bullets as the source JD supports — do not pad to reach 10 placeholder duties, and do not truncate real duties to fit fewer.",
+        "Each duty bullet must be real Markdown bullet syntax (leading '- '), not bold placeholder text like '[Duty 1 in bullet point]'.",
+        "If the JD file cannot be found or contains no duty-type content, output '[MISSING: job duties — no JD file found]' instead of generating generic or invented duties.",
+        "Treat the numbered '[Duty 1]' through '[Duty 10]' placeholders in the template as a structural guide only (i.e., 'duties go here as a list'), not as a required count or as literal content to preserve.",
+        "The job title must be the actual job title only (plain text, no brackets or placeholder formatting). It is not a placeholder and appears above the duties list."
+    ])
+    print(f"✓ Output rules length: {len(output_rules)} characters\n")
+    
+    print("[5/5] Combining all sections...")
+    all_sections = [
+        template_section,
+        "# Retrieved Case Record",
+        case_record_section,
+        legal_contract,
+        output_rules,
+    ]
+    
+    final_prompt = "\n\n".join(all_sections)
+    
+    print("=" * 100)
+    print("FINAL PROMPT READY")
+    print("=" * 100)
+    print(f"✓ Total final prompt length: {len(final_prompt)} characters")
+    print(f"✓ Total sections: {len(all_sections)}")
+    print("=" * 100)
+    print("\n*** FULL FINAL PROMPT BEING SENT TO OPENAI: ***\n")
+    print(final_prompt)
+    print("\n" + "=" * 100)
+    print("*** END OF FINAL PROMPT ***")
+    print("=" * 100 + "\n")
+    
+    logger.info("Final prompt length: %d characters", len(final_prompt))
+    
+    return final_prompt.strip()
 
 
 async def generate_document(file_type, retrieved_context, source_manifest):
     prompt_text = build_generation_prompt(file_type, retrieved_context, source_manifest)
     client = get_openai_client()
     logger.info("Generating %s with %s retrieved chunks", file_type, len(retrieved_context))
+    
+    # Log the full prompt being sent to the model
+    logger.info("=" * 100)
+    logger.info("PROMPT BEING SENT TO GENERATION MODEL FOR: %s", file_type)
+    logger.info("=" * 100)
+    logger.info("PROMPT LENGTH: %d characters", len(prompt_text))
+    logger.info("PROMPT CONTENT:\n%s", prompt_text)
+    logger.info("=" * 100)
+    
+    # Also print to console for immediate visibility
+    print("\n" + "=" * 100)
+    print(f"PROMPT BEING SENT TO GENERATION MODEL FOR: {file_type}")
+    print("=" * 100)
+    print(f"PROMPT LENGTH: {len(prompt_text)} characters")
+    print("PROMPT CONTENT:")
+    print(prompt_text)
+    print("=" * 100 + "\n")
 
     response = await asyncio.to_thread(
         client.responses.create,

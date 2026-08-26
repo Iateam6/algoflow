@@ -1,11 +1,11 @@
-VISA_TYPE = "eb-1a-a"
+VISA_TYPE = "eb-1aA"
 DISPLAY_NAME = "EB-1A A"
 CACHE_NAMESPACE = "eb_1a_a_rag"
 PIPELINE_VERSION = "eb-1a-a-rag-v1"
 
 SUPPORTED_DOCUMENT_TYPES = frozenset(
     {
-        "Petition Cover Letter",
+        "Form I-140 Cover Letter",
         "Intent to Depart",
         "Support Letter",
         "Recommendation Letter",

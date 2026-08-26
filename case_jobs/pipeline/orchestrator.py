@@ -22,7 +22,13 @@ from case_jobs.retrieval.corpus import build_case_chunks, build_corpus_hash
 logger = logging.getLogger(__name__)
 
 _VISA_URL_SEGMENT_OVERRIDES = {
-    "o-1": "o1",
+    # Keys must be lowercase because _visa_url_segment normalizes before lookup.
+    "eb-1aa": "eb-1aA",
+    "eb-1ab": "eb-1aB",
+    # These adapters use form/classification names internally, while their
+    # public API routes use descriptive URL segments.
+    "n-400": "naturalization",
+    "r-1": "reentry-permit",
 }
 
 
@@ -276,24 +282,32 @@ def execute_generation_job(job: dict) -> dict:
         )
     except CaseJobError as exc:
         logger.error(
-            "job failed job_id=%s tenant_id=%s stage=%s error_code=%s error_message=%s",
+            "job failed job_id=%s tenant_id=%s visa_type=%s stage=%s error_code=%s error_message=%s",
             job_id,
             tenant_id,
+            job.get("visa_type"),
             current_stage,
             exc.code,
             str(exc),
         )
-        reporter.failed(exc.code, str(exc))
+        reporter.failed(exc.code, str(exc), stage=current_stage)
         raise
-    except Exception:
+    except Exception as exc:
         logger.exception(
-            "job failed job_id=%s tenant_id=%s stage=%s error_code=%s",
+            "job failed job_id=%s tenant_id=%s visa_type=%s stage=%s error_code=%s exception_type=%s error_message=%s",
             job_id,
             tenant_id,
+            job.get("visa_type"),
             current_stage,
             "GENERATION_ERROR",
+            type(exc).__name__,
+            str(exc),
         )
-        reporter.failed("GENERATION_ERROR", "Document generation failed")
+        reporter.failed(
+            "GENERATION_ERROR",
+            f"Generation job failed during {current_stage}",
+            stage=current_stage,
+        )
         raise
     finally:
         cleanup_job_directory(work_dir)
