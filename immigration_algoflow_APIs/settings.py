@@ -34,13 +34,13 @@ SECRET_KEY = "django-insecure-0p+wz2#5h1bsxcb84+7b)i9)gp)+r1bx#)-b+8mr-2k6ip_(($
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-#ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["*"]
 
-# #CORS configuration
-# CORS_ALLOWED_ORIGINS = [
-#     "https://algoflow.visa26.com/",
-#     "https://app.visa26.com",
-# ]
+#CORS configuration
+CORS_ALLOWED_ORIGINS = [
+    "https://algoflow.visa26.com/",
+    "https://app.visa26.com",
+]
 
 # Application definition
 
@@ -144,7 +144,7 @@ STATIC_URL = "static/"
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-PUBLIC_BASE_URL = env.str("PUBLIC_BASE_URL", default="http://127.0.0.1:8000")
+PUBLIC_BASE_URL = env.str("PUBLIC_BASE_URL", default="https://algoflow.visa26.com")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
