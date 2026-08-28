@@ -14,22 +14,34 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     libmagic1 \
     redis-server \
+    libreoffice \
+    libreoffice-writer \
+    libreoffice-calc \
+    libreoffice-impress \
+    fonts-liberation \
+    fonts-dejavu \
     && rm -rf /var/lib/apt/lists/*
+
+# Verify LibreOffice installation
+RUN soffice --version
 
 # Install Python dependencies
 COPY requirements.txt .
+
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 # Copy project files
 COPY . .
 
+# Fix entrypoint permissions
 RUN sed -i 's/\r$//' /app/docker/entrypoint.sh \
     && chmod +x /app/docker/entrypoint.sh
 
 # Expose port
 EXPOSE 8098
 
-# Start with Uvicorn (ASGI server for Django async support)
+# Start application
 ENTRYPOINT ["/app/docker/entrypoint.sh"]
+
 CMD ["supervisord", "-c", "/app/docker/supervisord.conf"]
