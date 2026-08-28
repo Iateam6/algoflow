@@ -298,7 +298,7 @@ def _optional_exhibits(value: Any) -> tuple[Exhibit, ...]:
     return tuple(exhibits)
 
 
-def _validate_tn_exhibit_request(payload: dict[str, Any], visa_type: str) -> GenerationRequest:
+def _validate_exhibit_request(payload: dict[str, Any], visa_type: str) -> GenerationRequest:
     if set(payload) != EXHIBIT_REQUEST_FIELDS:
         raise ValidationError("request contains missing or unsupported fields")
     case_id = _required_string(payload, "case_id", "request")
@@ -307,7 +307,10 @@ def _validate_tn_exhibit_request(payload: dict[str, Any], visa_type: str) -> Gen
     document_slug = _required_string(payload, "document_slug", "request")
     if document_slug != "exhibit-list":
         raise ValidationError("request.document_slug must be exhibit-list")
-    adapter = get_adapter(visa_type)
+    try:
+        adapter = get_adapter(visa_type)
+    except LookupError as exc:
+        raise ValidationError(str(exc)) from exc
     if "Exhibit List" not in adapter.supported_document_types:
         raise ValidationError(f"unsupported document_type for {visa_type}")
     if not settings.WEBHOOK_ROOT_URL:
@@ -330,11 +333,10 @@ def validate_generation_request(payload: Any, visa_type: str) -> GenerationReque
     if not isinstance(payload, dict):
         raise ValidationError("request body must be a JSON object")
     if (
-        visa_type.strip().lower() == "tn"
-        and payload.get("document_type") == "Exhibit List"
+        payload.get("document_type") == "Exhibit List"
         and "exhibits" in payload
     ):
-        return _validate_tn_exhibit_request(payload, visa_type)
+        return _validate_exhibit_request(payload, visa_type)
     payload_fields = set(payload)
     if not REQUEST_FIELDS.issubset(payload_fields) or payload_fields - (
         REQUEST_FIELDS | OPTIONAL_REQUEST_FIELDS
