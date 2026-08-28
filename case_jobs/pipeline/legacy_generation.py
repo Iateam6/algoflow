@@ -12,7 +12,7 @@ from bs4.element import NavigableString, Tag
 from django.conf import settings
 from docx import Document
 
-from immigration_algoai_APIs.media_cleanup import clean_media_files_for_generation, delete_file_if_exists
+from immigration_algoflow_APIs.media_cleanup import clean_media_files_for_generation, delete_file_if_exists
 
 from case_jobs.retrieval.visa_rag import get_or_build_corpus
 from case_jobs.pipeline.context_enrichment import (
