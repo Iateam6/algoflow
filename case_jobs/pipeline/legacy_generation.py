@@ -12,7 +12,7 @@ from bs4.element import NavigableString, Tag
 from django.conf import settings
 from docx import Document
 
-from immigration_algoflow_APIs.media_cleanup import clean_media_files_for_generation, delete_file_if_exists
+from immigration_algoai_APIs.media_cleanup import clean_media_files_for_generation, delete_file_if_exists
 
 from case_jobs.retrieval.visa_rag import get_or_build_corpus
 from case_jobs.pipeline.context_enrichment import (
@@ -68,7 +68,7 @@ def build_exhibit_request_prompt(submitted_request: dict) -> InlinePromptDocumen
     payload = json.dumps(compact_request, sort_keys=True, separators=(",", ":"))
     content = "\n".join(
         (
-            "# Submitted TN Exhibit Request (from request payload)",
+            "# Submitted Exhibit Request (from request payload)",
             "Use the visa-specific Exhibit List template and treat the compact payload below as authoritative.",
             "Preserve the exhibit array order, numbers, titles, item names, and item order exactly.",
             "Label each item as <exhibit number>.<one-based item position>.",
